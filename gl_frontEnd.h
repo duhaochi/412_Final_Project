@@ -25,12 +25,11 @@
 		#include <GL/freeglut.h>
 		#include <GL/gl.h>
 	#endif
-#elif defined(linux)
+#elif (defined(linux) || defined(__unix__))
 	#include <GL/glut.h>
 #else
 	#error unknown OS
 #endif
-
 
 //-----------------------------------------------------------------------------
 //	Function prototypes
@@ -46,19 +45,17 @@ void drawTraveler(const Traveler& traveler);
 //	This function assigns a color to the door based on its number
 void drawDoor(int doorNumber, int doorRow, int doorCol);
 
-//	Defined in main.c
+//	Defined in main.cpp
 void speedupTravelers(void);
 void slowdownTravelers(void);
 void drawTravelers(void);
 void updateMessages(void);
-
-
-void drawGrid(void);
 void drawMessages(int numMessages, char** message);
 void handleKeyboardEvent(unsigned char c, int x, int y);
 
 void initializeFrontEnd(int argc, char** argv);
 float** createTravelerColors(unsigned int numTravelers);
+
 
 #endif // GL_FRONT_END_H
 

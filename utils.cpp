@@ -7,7 +7,6 @@
 
 #include "dataTypes.h"
 
-
 std::string dirStr(const Direction& dir)
 {
 	std::string outStr;

@@ -17,7 +17,7 @@
  *		you get the opposite Orientations from dir as (NUM_OrientationS - dir)
  *	you get left turn from dir as (dir + 1) % NUM_OrientationS
  */
-using Direction = enum
+typedef enum Direction
 {
 	NORTH = 0,
 	WEST,
@@ -25,12 +25,12 @@ using Direction = enum
 	EAST,
 	//
 	NUM_DIRECTIONS
-};
+} Direction;
 
 
 /**	Grid square types for this simulation
  */
-using SquareType = enum
+typedef enum SquareType
 {
 	FREE_SQUARE,
 	EXIT,
@@ -40,42 +40,45 @@ using SquareType = enum
 	TRAVELER,
 	//
 	NUM_SQUARE_TYPES
-};
+
+} SquareType;
 
 /**	Data type to store the position of *things* on the grid
  */
-using GridPosition = struct
+typedef struct GridPosition
 {
 	/**	row index
 	 */
 	unsigned int row;
 	/** column index
-     */
+	 */
 	unsigned int col;
-};
+
+} GridPosition;
 
 /**
  *	Data type to store the position and Direction of a traveler's segment
  */
-using TravelerSegment = struct
+typedef struct TravelerSegment
 {
 	/**	row index
 	 */
 	unsigned int row;
 	/** column index
-     */
+	 */
 	unsigned int col;
 	/**	One of four possible orientations
 	 */
 	Direction dir;
-};
+
+} TravelerSegment;
 
 
 /**
  *	Data type for storing all information about a traveler
  *	Feel free to add anything you need.
  */
-using Traveler = struct
+typedef struct Traveler
 {
 	/**	The traveler's index
 	 */
@@ -89,12 +92,12 @@ using Traveler = struct
 	 */
 	std::vector<TravelerSegment> segmentList;
 	
-};
+} Traveler;
 
 /**
  *	Data type to represent a sliding partition
  */
-using SlidingPartition = struct
+typedef struct SlidingPartition
 {
 	/*	vertical vs. horizontal partition
 	 */
@@ -106,7 +109,7 @@ using SlidingPartition = struct
 	 */
 	std::vector<GridPosition> blockList;
 
-};
+} SlidingPartition;
 
 
 /**	Ugly little function to return a direction as a string
@@ -120,6 +123,7 @@ std::string dirStr(const Direction& dir);
 *	@return the square type in readable string form
 */
 std::string typeStr(const SquareType& type);
+
 
 
 #endif //	DATAS_TYPES_H

@@ -25,7 +25,6 @@
 //
 #include "gl_frontEnd.h"
 
-
 const extern int MAX_NUM_MESSAGES;
 const extern int MAX_LENGTH_MESSAGE;
 
@@ -58,6 +57,7 @@ void myKeyboard(unsigned char c, int x, int y);
 void myTimerFunc(int val);
 void createtravelerColors(void);
 void freetravelerColors(void);
+void drawGrid(void);
 
 //---------------------------------------------------------------------------
 //  Interface constants
