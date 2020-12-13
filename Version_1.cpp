@@ -201,8 +201,8 @@ int main(int argc, char** argv)
     //    to be the width (number of columns) and height (number of rows) of the
     //    grid, the number of travelers, etc.
     //    So far, I hard code-some values
-    numRows = 40;
-    numCols = 45;
+    numRows = 10;
+    numCols = 10;
     numTravelers = atoi(argv[1]);
     numLiveThreads = 0;
     numTravelersDone = 0;
@@ -309,8 +309,8 @@ void* create_travelers(void*){
         {
             printf("ERROR: Failed to create thread %d with error_code=%d\n", i, error_code);
         }
-        //make this number bigger if seg_falut happens when creating muiltiple traveler
-        usleep(1000);
+        //make this number bigger if seg falut happens when creating muiltiple traveler
+        sleep(1);
     }
     
     return NULL;
@@ -339,19 +339,15 @@ void* player_behaviour(void* traveler_index){
     for (unsigned int c=0; c<4; c++){
         travelerList[index].rgba[c] = travelerColor[travelerList[traveler_thread->threadIndex].index][c];
     }
-    bool canAddSegment = true;
     //    I add 0-n segments to my travelers
     while (true){
         TravelerSegment currSeg = travelerList[index].segmentList[0];
         dir = static_cast<Direction>(segmentDirectionGenerator(engine));
-        for (unsigned int s=0; s<1 && canAddSegment; s++)
+        for (unsigned int s=0; s<1; s++)
         {
-            if (canAddSegment) {
-                moveTraveler(index, newDirection(currSeg.dir), true);
-                cout << dirStr(currSeg.dir) << "  ";
-            }else{
-                canAddSegment = true;
-            }
+            
+            moveTraveler(index, newDirection(currSeg.dir), true);
+            
         }
         sleep(1);
     }
@@ -370,45 +366,67 @@ void moveTraveler(unsigned int index, Direction dir, bool growTail)
             travelerList[index].segmentList[0].col << ", " <<
             dirStr(travelerList[index].segmentList[0].dir) << ")" <<
             " in direction: " << dirStr(dir) << endl;
-            
+    Direction forbiden_dir = NORTH;
     // no testing
     switch (dir)
     {
         case NORTH: {
-            
-            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
-                                        travelerList[index].segmentList[0].col,
-                                        NORTH};
-            travelerList[index].segmentList.push_front(newSeg);
+            if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
+                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
+                                            travelerList[index].segmentList[0].col,
+                                            NORTH};
+                travelerList[index].segmentList.push_front(newSeg);
+                grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+            }else{
+                forbiden_dir = SOUTH;
+            }
         }
         break;
 
         case WEST: {
-            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
-                                        travelerList[index].segmentList[0].col-1,
-                                        WEST};
-            travelerList[index].segmentList.push_front(newSeg);
+            if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE) {
+                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                            travelerList[index].segmentList[0].col-1,
+                                            WEST};
+                travelerList[index].segmentList.push_front(newSeg);
+                 grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+            }else{
+                forbiden_dir = EAST;
+            }
         }
         break;
         case EAST: {
-        TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
-                                    travelerList[index].segmentList[0].col+1,
-                                    EAST};
-        travelerList[index].segmentList.push_front(newSeg);
+            if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE){
+                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                            travelerList[index].segmentList[0].col+1,
+                                            EAST};
+                travelerList[index].segmentList.push_front(newSeg);
+                 grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+            }else{
+                forbiden_dir = WEST;
+            }
         }
         break;
         
         case SOUTH: {
-            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
-                                        travelerList[index].segmentList[0].col,
-                                        SOUTH};
-            travelerList[index].segmentList.push_front(newSeg);
+            if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
+                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
+                                            travelerList[index].segmentList[0].col,
+                                            SOUTH};
+                travelerList[index].segmentList.push_front(newSeg);
+                grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+            }else{
+                forbiden_dir = NORTH;
+            }
+            
+        
         }
         default:
             //this need to be changed
             return;
         break;
     }
+    
     
     if (!growTail){
         travelerList[index].segmentList.pop_back();
@@ -422,8 +440,7 @@ void moveTraveler(unsigned int index, Direction dir, bool growTail)
 #endif
 //------------------------------------------------------
 
-GridPosition getNewFreePosition(void)
-{
+GridPosition getNewFreePosition(void){
     GridPosition pos;
 
     bool noGoodPos = true;
@@ -441,8 +458,7 @@ GridPosition getNewFreePosition(void)
     return pos;
 }
 
-Direction newDirection(Direction forbiddenDir)
-{
+Direction newDirection(Direction forbiddenDir){
     switch (forbiddenDir)
     {
         case NORTH:
