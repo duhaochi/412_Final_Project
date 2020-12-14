@@ -29,6 +29,10 @@ Understanding of the Project specifications.
                     : Finish some self understanding of the project specs.
                     1. Version 1 - La Raw and 2 - Haochi Du
                     2. Later Versions.
+
+    Tuesday:    6:00 P.M. to 8:00 P.M. (12/15/2020)
+    Wednesday:  4:00 P.M. to 6:00 P.M. (12/16/2020)
+    Friday:     12:00 P.M. to 2:00 P.M. (12/18/2020)
 ```
     
 
