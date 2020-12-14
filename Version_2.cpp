@@ -42,6 +42,7 @@ unsigned int numCols = 0;    //    width
 unsigned int numTravelers = 0;    //    initial number
 unsigned int numTravelersDone = 0;
 unsigned int numLiveThreads = 0;        //    the number of live traveler threads
+unsigned int growSegAfterNumOfMove = 0; // the number of N moves after which a traveler should grow a new segment.
 vector<Traveler> travelerList;
 vector<SlidingPartition> partitionList;
 GridPosition    exitPos;    //    location of the exit
@@ -206,6 +207,26 @@ int main(int argc, char** argv)
     numTravelers = atoi(argv[1]);
     numLiveThreads = 0;
     numTravelersDone = 0;
+
+    /* Version 2 LARAW*/
+
+    if(argc != 5){
+        printf("Usage: <executable>");
+        printf(" <width of the grid>");
+        printf(" <height N of the grid>");
+        printf(" <number of travelers> ");
+        printf(" <number of N moves after which a traver should grow a new segment>\n");
+        exit(1);
+    }
+
+    numCols= atoi(argv[1]);
+    numRows = atoi(argv[2]);
+    numTravelers = atoi(argv[3]);
+    growSegAfterNumOfMove = atoi(argv[4]);
+    numLiveThreads = 0;
+    numTravelersDone = 0;
+
+    /* end */
     
     //    Even though we extracted the relevant information from the argument
     //    list, I still need to pass argc and argv to the front-end init

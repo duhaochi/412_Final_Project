@@ -1,0 +1,4 @@
+Path Planning - A* (A-Star)
+in c++ implementation
+https://www.youtube.com/watch?v=icZj67PTFhc
+https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_PathFinding_AStar.cpp

@@ -1,0 +1,26 @@
+ATTEND OFFICE HOUR
+    Tuesday:    6:00 P.M. to 8:00 P.M. (12/15/2020)
+    Wednesday:  4:00 P.M. to 6:00 P.M. (12/16/2020)
+    Friday:     12:00 P.M. to 2:00 P.M. (12/18/2020)
+
+As of
+    When there is no free space on the grid, segment fault.
+    When no argument is provided, the grid keep filling and program gives seg fault.
+    When traveller are larger than the grid, 
+
+
+FINALLIZE VERSION 1 & 2 by end of the day.
+
+    V1. QUESTION
+        Does it ask any user input?
+            i.e. width,
+                 height,
+                 moves_to_grow_segment
+
+        Are we hardcoding for this single traveler or asking user input?
+
+    QUESTION TO VERIFY
+        MAX and MIN of grid
+        
+    ASSUMTION
+        program expect user to provide numeric string type.
