@@ -189,9 +189,6 @@ void slowdownTravelers(void)
     travelerSleepTime = (12 * travelerSleepTime) / 10;
 }
 
-
-
-
 //------------------------------------------------------------------------
 //    You shouldn't have to change anything in the main function besides
 //    initialization of the various global variables and lists
