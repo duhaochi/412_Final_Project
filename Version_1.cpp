@@ -42,6 +42,7 @@ unsigned int numCols = 0;    //    width
 unsigned int numTravelers = 0;    //    initial number
 unsigned int numTravelersDone = 0;
 unsigned int numLiveThreads = 0;        //    the number of live traveler threads
+unsigned int growSegAfterNumOfMove = 0; // the number of N moves after which a traveler should grow a new segment.
 vector<Traveler> travelerList;
 vector<SlidingPartition> partitionList;
 GridPosition    exitPos;    //    location of the exit
@@ -201,12 +202,18 @@ int main(int argc, char** argv)
     //    to be the width (number of columns) and height (number of rows) of the
     //    grid, the number of travelers, etc.
     //    So far, I hard code-some values
-    numRows = 10;
-    numCols = 10;
-    numTravelers = atoi(argv[1]);
-    numLiveThreads = 0;
-    numTravelersDone = 0;
+
+    /* Version 1  LARAW */
+    numCols= 50; // == INIT_WIN_X (gl_frontEnd.cpp)
+    numRows = 40; // == INIT_WIN_Y (gl_frontEnd.cpp)
+    numTravelers = 1; // Single-traveler per hand-out
+    growSegAfterNumOfMove = 5; // arbitrary setting. can be set to any num
+    numLiveThreads = 0; // why is it ZERO?
+    numTravelersDone = 0;  // why is it ZERO?
+    /* END */ 
+
     
+
     //    Even though we extracted the relevant information from the argument
     //    list, I still need to pass argc and argv to the front-end init
     //    function because that function passes them to glutInit, the required call
@@ -282,8 +289,8 @@ void initializeApplication(void)
     
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
+    generateWalls();
+    generatePartitions();
     
     //    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
