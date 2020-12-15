@@ -21,6 +21,10 @@ FINALLIZE VERSION 1 & 2 by end of the day.
 
     QUESTION TO VERIFY
         MAX and MIN of grid
+    
+        once all the traveler exited,
+            When do we do?
         
     ASSUMTION
         program expect user to provide numeric string type.
+        The traveler do not 

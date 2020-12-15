@@ -61,5 +61,9 @@ Step 5:
 		get list of possible moves
 
 Version 1 finished.
+```
 
+EXTRA CREDIT
+```
+    4.1 Progressive disapearance (4pt) (done - see Version 1 implementation)
 ```
