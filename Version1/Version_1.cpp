@@ -329,6 +329,7 @@ void* player_behaviour(void* traveler_index){
     ThreadInfo* traveler_thread = (ThreadInfo*) traveler_index;
     int index = traveler_thread->threadIndex;
     travelerList[index].index = index;
+    travelerList[index].travelling = true;
     float** travelerColor = createTravelerColors(numTravelers);
     GridPosition pos = getNewFreePosition();
     //    Note that treating an enum as a sort of integer is increasingly
@@ -385,92 +386,100 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
     Direction forbiden_dir = NORTH;
     // no testing
 
-    switch (dir)
-    {
-        case NORTH: {
-            if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == EXIT){
-                //travelerList.erase(travelerList.begin()+index);
-                if(travelerList[index].segmentList.size() > 1){
-                    travelerList[index].segmentList.pop_back();
-                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = FREE_SQUARE;
+    if (travelerList[index].travelling){
+
+        switch (dir)
+        {
+            case NORTH: {
+                if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == EXIT){
+                    //travelerList.erase(travelerList.begin()+index);
+                    travelerList[index].travelling = false;
                     return true;
+                }
+
+                if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == FREE_SQUARE)
+                {
+                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
+                                                travelerList[index].segmentList[0].col,
+                                                NORTH};
+                    travelerList[index].segmentList.push_front(newSeg);
+                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                 }else{
-                    travelerList.erase(travelerList.begin()+index);
-                    return false;
+                    forbiden_dir = SOUTH;
+                }
+            }
+            break;
+
+            case WEST: {
+                if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == EXIT){
+                    //travelerList.erase(travelerList.begin()+index);
+                    travelerList[index].travelling = false;
+                    return true;
+                }
+                if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE) {
+                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                                travelerList[index].segmentList[0].col-1,
+                                                WEST};
+                    travelerList[index].segmentList.push_front(newSeg);
+                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                }else{
+                    forbiden_dir = EAST;
+                }
+            }
+            break;
+            case EAST: {
+                if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == EXIT){
+                    //travelerList.erase(travelerList.begin()+index);
+                    travelerList[index].travelling = false;
+                    return true;
+                }
+                if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE){
+                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                                travelerList[index].segmentList[0].col+1,
+                                                EAST};
+                    travelerList[index].segmentList.push_front(newSeg);
+                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                }else{
+                    forbiden_dir = WEST;
+                }
+            }
+            break;
+            
+            case SOUTH: {
+                if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == EXIT){
+                    //travelerList.erase(travelerList.begin()+index);
+                    travelerList[index].travelling = false;
+                    return true;
                 } 
+                if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
+                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
+                                                travelerList[index].segmentList[0].col,
+                                                SOUTH};
+                    travelerList[index].segmentList.push_front(newSeg);
+                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                }else{
+                    forbiden_dir = NORTH;
+                }
             }
-
-
-            if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == FREE_SQUARE)
-              {
-                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
-                                            travelerList[index].segmentList[0].col,
-                                            NORTH};
-                travelerList[index].segmentList.push_front(newSeg);
-                grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
-            }else{
-                forbiden_dir = SOUTH;
-            }
+            default:
+                //this need to be changed
+                return true;
+            break;
         }
-        break;
-
-        case WEST: {
-            if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == EXIT){
-                //travelerList.erase(travelerList.begin()+index);
-                sleep(5);
-                return false;
-            }
-            if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE) {
-                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
-                                            travelerList[index].segmentList[0].col-1,
-                                            WEST};
-                travelerList[index].segmentList.push_front(newSeg);
-                 grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
-            }else{
-                forbiden_dir = EAST;
-            }
-        }
-        break;
-        case EAST: {
-            if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == EXIT){
-                //travelerList.erase(travelerList.begin()+index);
-                sleep(5);
-                return false;
-            }
-            if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE){
-                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
-                                            travelerList[index].segmentList[0].col+1,
-                                            EAST};
-                travelerList[index].segmentList.push_front(newSeg);
-                 grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
-            }else{
-                forbiden_dir = WEST;
-            }
-        }
-        break;
-        
-        case SOUTH: {
-            if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == EXIT){
-                //travelerList.erase(travelerList.begin()+index);
-                sleep(5);
-                return false;
-            } 
-            if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
-                TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
-                                            travelerList[index].segmentList[0].col,
-                                            SOUTH};
-                travelerList[index].segmentList.push_front(newSeg);
-                grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
-            }else{
-                forbiden_dir = NORTH;
-            }
-        }
-        default:
-            //this need to be changed
+    }// if travelling block
+    else{
+        if(travelerList[index].segmentList.size() > 1){
+            travelerList[index].segmentList.pop_back();
+            grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = FREE_SQUARE;
+            //sleep(1);
             return true;
-        break;
+        }else{
+            travelerList.erase(travelerList.begin()+index);
+            return false;
+        }   
+
     }
-    
+
     
     if (!growTail){
         travelerList[index].segmentList.pop_back();
