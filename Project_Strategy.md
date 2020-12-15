@@ -66,4 +66,7 @@ Version 1 finished.
 EXTRA CREDIT
 ```
     4.1 Progressive disapearance (4pt) (done - see Version 1 implementation)
+        Problem Encountered:
+            - once it reached the exit point, the traveller still stravelling
+            - fixed by guarded before switch statement.
 ```
