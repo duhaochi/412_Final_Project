@@ -95,7 +95,13 @@ typedef struct Traveler
     /**    The list of segments that form the 'tail' of the traveler
      */
     std::deque<TravelerSegment> segmentList;
-    
+
+    /*      Traveler reached exit point = true;
+            still travelling = false;
+            Value is set in player_berhavior();
+    */
+    bool travelling;
+
 } Traveler;
 
 /**
@@ -131,3 +137,5 @@ std::string typeStr(const SquareType& type);
 
 
 #endif //    DATAS_TYPES_H
+
+
