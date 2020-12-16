@@ -13,15 +13,19 @@ FINALLIZE VERSION 1 & 2 by end of the day.
 
     V1. QUESTION
         Does it ask any user input?
+        HARDCODE FOR traveler
             i.e. width,
                  height,
                  moves_to_grow_segment
+
+                 INT_MAX from <climit.h>
 
         Are we hardcoding for this single traveler or asking user input?
 
     QUESTION TO VERIFY
         MAX and MIN of grid
-    
+        row 12;
+        col 12;
         once all the traveler exited,
             When do we do?
         
