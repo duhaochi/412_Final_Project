@@ -317,8 +317,8 @@ void initializeApplication(void)
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
+    generateWalls();
+    generatePartitions();
     
     //    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
@@ -384,9 +384,11 @@ void* player_behaviour(void* traveler_index){
     travelerList[index].segmentList.push_back(seg);
 
     grid[pos.row][pos.col] = TRAVELER;
+    /*
     cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
     pos.col << "), direction: " << dirStr(dir) <<  endl;
     cout << "\t";
+    */
 
     for (unsigned int c=0; c<4; c++){
         travelerList[index].rgba[c] = travelerColor[travelerList[traveler_thread->threadIndex].index][c];
@@ -435,11 +437,13 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
             True == Traveler is still travelling.
             False == Traveler reached EXIT.
     */
+   /*
     cout << "Moving traveler " << index << " at (" <<
             travelerList[index].segmentList[0].row << ", " <<
             travelerList[index].segmentList[0].col << ", " <<
             dirStr(travelerList[index].segmentList[0].dir) << ")" <<
             " in direction: " << dirStr(dir) << endl;
+    */
     // no testing
 
   
@@ -448,11 +452,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 
         switch (dir)
         {
-
-                // [ 0 0 0 0
-                //   0 X 0 0
-                //   0 1 0 0
-                // ]
             case NORTH: {
                 if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == EXIT){
                     travelerList[index].travelling = false;
