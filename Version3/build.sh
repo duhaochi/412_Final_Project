@@ -17,6 +17,6 @@
 #clang++ -Wall -w -Wno-deprecated-declarations -std=c++17 -stdlib=libc++ gl_frontEnd.cpp Version_2.cpp utils.cpp -framework OpenGL -framework GLUT -lpthread -o version_2
 
 # Version 3
-#clang++ -Wall -w -Wno-deprecated-declarations -std=c++17 -stdlib=libc++ gl_frontEnd.cpp Version_3.cpp utils.cpp -framework OpenGL -framework GLUT -lpthread -o version_3
+clang++ -Wall -w -Wno-deprecated-declarations -std=c++17 -stdlib=libc++ gl_frontEnd.cpp Version_3.cpp utils.cpp -framework OpenGL -framework GLUT -lpthread -o version_3
 
 
