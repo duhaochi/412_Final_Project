@@ -89,6 +89,8 @@ typedef struct ThreadInfo
     
 } ThreadInfo;
 
+static pthread_mutex_t LOCK;
+
 ThreadInfo* thread_array;
 
 //==================================================================================
@@ -248,6 +250,8 @@ int main(int argc, char** argv)
     //    "lose control" over its execution.  The callback functions that
     //    we set up earlier will be called when the corresponding event
     //    occurs
+    
+    sleep(1);
     glutMainLoop();
     
     //    Free allocated resource before leaving (not absolutely needed, but
@@ -275,6 +279,7 @@ int main(int argc, char** argv)
 
 void initializeApplication(void)
 {
+    pthread_mutex_init(&LOCK, NULL);
     //    Initialize some random generators
     rowGenerator = uniform_int_distribution<unsigned int>(0, numRows-1);
     colGenerator = uniform_int_distribution<unsigned int>(0, numCols-1);
@@ -344,7 +349,7 @@ void* create_travelers(void*){
             printf("ERROR: Failed to create thread %d with error_code=%d\n", i, error_code);
         }
         //make this number bigger if seg falut happens when creating muiltiple traveler
-        usleep(100);
+        usleep(10000);
     }
     
     return NULL;
@@ -352,12 +357,15 @@ void* create_travelers(void*){
 
 void* player_behaviour(void* traveler_index){
     Traveler traveler;
+    
     travelerList.push_back(traveler);
     
     ThreadInfo* traveler_thread = (ThreadInfo*) traveler_index;
     int index = traveler_thread->threadIndex;
+    
     travelerList[index].index = index;
     travelerList[index].travelling = true;
+    
     float** travelerColor = createTravelerColors(numTravelers);
     
     TravelerSegment newSeg;
@@ -414,8 +422,10 @@ void* player_behaviour(void* traveler_index){
         // HARDCODED END
 
         // UNCOMMENT THIS ONCE IT'S WORKING
+        pthread_mutex_lock(&LOCK);
         still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
-        usleep(100000);
+        pthread_mutex_unlock(&LOCK);
+        sleep(1);
     }
 
     numLiveThreads--;
