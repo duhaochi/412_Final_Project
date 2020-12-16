@@ -73,7 +73,6 @@ typedef struct TravelerSegment
     /**    One of four possible orientations
      */
     Direction dir;
-    Direction next_dir;
 
 } TravelerSegment;
 
@@ -95,12 +94,12 @@ typedef struct Traveler
     /**    The list of segments that form the 'tail' of the traveler
      */
     std::deque<TravelerSegment> segmentList;
-
-    /*      Traveler reached exit point = true;
+	int move_counter;
+	/*      Traveler reached exit point = true;
             still travelling = false;
             Value is set in player_berhavior();
     */
-    bool travelling;
+	bool travelling;
 
 } Traveler;
 

@@ -136,7 +136,7 @@ void drawTraveler(const Traveler& traveler)
 	glTranslatef((traveler.segmentList[0].col + 0.5f)*DH,
 				 (traveler.segmentList[0].row + 0.5f)*DV, 0.f);
 	//	draw the "head"
-	if(traveler.travelling)
+	//if(traveler.travelling)
 	{
 		glPushMatrix();
 		glScalef(0.2f, 0.2f, 1.f);
