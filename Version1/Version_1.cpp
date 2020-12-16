@@ -203,7 +203,7 @@ int main(int argc, char** argv)
     /* Version 1  LARAW */
     numCols= 6; // == INIT_WIN_X (gl_frontEnd.cpp)
     numRows = 2; // == INIT_WIN_Y (gl_frontEnd.cpp)
-    numTravelers = 1; // Single-traveler per hand-out
+    numTravelers = 2; // Single-traveler per hand-out
     growSegAfterNumOfMove = 5; // arbitrary setting. can be set to any num
     numLiveThreads = 0; // why is it ZERO?
     numTravelersDone = 0;  // why is it ZERO?
