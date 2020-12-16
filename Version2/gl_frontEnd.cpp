@@ -120,6 +120,7 @@ GLfloat** travelerColor;
 
 void drawTraveler(const Traveler& traveler)
 {
+<<<<<<< HEAD
     //    Yes, I know that it's inefficient to recompute this each and every time,
     //    but gcc on Ubuntu doesn't let me define these as static [!??]
     const GLfloat    DH = (GRID_PANE_WIDTH - 2.f)/ numCols,
@@ -182,6 +183,70 @@ void drawTraveler(const Traveler& traveler)
         glEnd();    }
     
     glPopMatrix();
+=======
+	//	Yes, I know that it's inefficient to recompute this each and every time,
+	//	but gcc on Ubuntu doesn't let me define these as static [!??]
+	const GLfloat	DH = (GRID_PANE_WIDTH - 2.f)/ numCols,
+					DV = (GRID_PANE_HEIGHT - 2.f) / numRows;
+	GLfloat segMove[4][2] = {
+								{0, DV},	//	NORTH
+								{DH, 0},	//	WEST
+								{0, -DV},	//	SOUTH
+								{-DH, 0}};	//	EAST
+
+	glColor4fv(traveler.rgba);
+	glPushMatrix();
+	//	The first segment is different
+	glTranslatef((traveler.segmentList[0].col + 0.5f)*DH,
+				 (traveler.segmentList[0].row + 0.5f)*DV, 0.f);
+	//	draw the "head"
+	//if(traveler.travelling)
+	{
+		glPushMatrix();
+		glScalef(0.2f, 0.2f, 1.f);
+		glBegin(GL_POLYGON);
+			glVertex2f(0, DV);
+			glVertex2f(-DH, 0);
+			glVertex2f(0, -DV);
+			glVertex2f(DH, 0);
+		glEnd();
+		glPopMatrix();
+	}
+	if (traveler.segmentList.size() > 1)
+	{
+		for (unsigned int currSegIndex=0; currSegIndex<traveler.segmentList.size()-1; currSegIndex++)
+		{
+			//	draw a segment to the center of the next square
+			glBegin(GL_LINES);
+				glVertex2f(0, 0);
+				glVertex2f(segMove[traveler.segmentList[currSegIndex].dir][0],
+						   segMove[traveler.segmentList[currSegIndex].dir][1]);
+			glEnd();
+			
+			//	and move to that point
+			glTranslatef(segMove[traveler.segmentList[currSegIndex].dir][0],
+						 segMove[traveler.segmentList[currSegIndex].dir][1],
+						 0.f);
+
+		}
+		//	The last segment is a bit shorter
+		glBegin(GL_LINES);
+			glVertex2f(0, 0);
+			glVertex2f(segMove[traveler.segmentList[traveler.segmentList.size()-1].dir][0]*0.8f,
+					   segMove[traveler.segmentList[traveler.segmentList.size()-1].dir][1]*0.8f);
+		glEnd();
+	}
+	else
+	{
+		//	draw the only segment
+		glBegin(GL_LINES);
+			glVertex2f(0, 0);
+			glVertex2f(segMove[traveler.segmentList[0].dir][0]*0.4f,
+					   segMove[traveler.segmentList[0].dir][1]*0.4f);
+		glEnd();	}
+	
+	glPopMatrix();
+>>>>>>> 36828f31c3c50eeb6d5ea25509508b09593b9975
 
 }
 
