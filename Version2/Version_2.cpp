@@ -109,7 +109,8 @@ void drawTravelers(void)
     for (unsigned int k=0; k<travelerList.size(); k++)
     {
         //    here I would test if the traveler thread is still live
-        drawTraveler(travelerList[k]);
+        if(travelerList[k].segmentList.size() > 0)
+            drawTraveler(travelerList[k]);
     }
 }
 
@@ -205,8 +206,8 @@ int main(int argc, char** argv)
     numRows = 5; // == INIT_WIN_Y (gl_frontEnd.cpp)
     numTravelers = 2; // Single-traveler per hand-out
     growSegAfterNumOfMove = 5; // arbitrary setting. can be set to any num
-    numLiveThreads = 0; // why is it ZERO?
-    numTravelersDone = 0;  // why is it ZERO?
+    numLiveThreads = numTravelers; // Once they finish, thread--;
+    numTravelersDone = 0;  // why is it ZERO? Nobody finishes yet.
     /* END */ 
 
     
@@ -369,25 +370,36 @@ void* player_behaviour(void* traveler_index){
         travelerList[index].rgba[c] = travelerColor[travelerList[traveler_thread->threadIndex].index][c];
     }
 
+    // HARDCODED START
+    vector<Direction> secondThdir = { NORTH, WEST, SOUTH, WEST};
+    int temp=0;
+    // HARDCODED END
+
     bool still_travelling = true;
     //    I add 0-n segments to my travelers
     while (still_travelling){
 		TravelerSegment currSeg = travelerList[index].segmentList[0];
 		
-        still_travelling = moveTraveler(index, dir, true);
-        // if(!still_travelling){
-        //     while(travelerList[index].segmentList.size() > 1){
-        //         travelerList[index].segmentList.pop_back();
-        //         sleep(1);
-        //     }
-        //     travelerList.erase(travelerList.begin()+index);
-        // }
+        // HARDCODED START
+        if(index == 1){
+            still_travelling = moveTraveler(index, secondThdir.at(temp++) , true);
+            if(temp==4){
+                temp= 0;
+            }
+        }else{
+            still_travelling = moveTraveler(index, dir, true);
+        }		
+        // HARDCODED END
 
+        // UNCOMMENT THIS ONCE IT'S WORKING
+        // dir = static_cast<Direction>(segmentDirectionGenerator(engine));
+        // still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
         sleep(1);
     }
+
+    numLiveThreads--;
+    numTravelersDone++;
     
-    // Threads [5 ] or [4];
-    // travelerList [4];
     for (unsigned int k=0; k<numTravelers; k++)
         delete []travelerColor[k];
     delete []travelerColor;
@@ -416,7 +428,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
         {
             case NORTH: {
                 if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == EXIT){
-                    //travelerList.erase(travelerList.begin()+index);
                     travelerList[index].travelling = false;
                     return true;
                 }
@@ -436,7 +447,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 
             case WEST: {
                 if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == EXIT){
-                    //travelerList.erase(travelerList.begin()+index);
                     travelerList[index].travelling = false;
                     return true;
                 }
@@ -453,7 +463,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
             break;
             case EAST: {
                 if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == EXIT){
-                    //travelerList.erase(travelerList.begin()+index);
                     travelerList[index].travelling = false;
                     return true;
                 }
@@ -471,7 +480,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
             
             case SOUTH: {
                 if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == EXIT){
-                    //travelerList.erase(travelerList.begin()+index);
                     travelerList[index].travelling = false;
                     return true;
                 } 
@@ -492,16 +500,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
         }
     }// if travelling block
     else{
-        if(travelerList[index].segmentList.size() > 1){
+        if(travelerList[index].segmentList.size() > 0){
             travelerList[index].segmentList.pop_back();
             grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = FREE_SQUARE;
-            //sleep(1);
             return true;
         }else{
-			// for (int i = index + 1; i < numTravelers; i++){
-			// 	travelerList[index].index = travelerList[index].index - 1;
-			// }
-			// travelerList.erase(travelerList.begin() + index);
             grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = FREE_SQUARE;
             return false;
         }   
