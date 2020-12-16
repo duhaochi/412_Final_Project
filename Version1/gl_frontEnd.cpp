@@ -136,15 +136,18 @@ void drawTraveler(const Traveler& traveler)
 	glTranslatef((traveler.segmentList[0].col + 0.5f)*DH,
 				 (traveler.segmentList[0].row + 0.5f)*DV, 0.f);
 	//	draw the "head"
-	glPushMatrix();
-	glScalef(0.2f, 0.2f, 1.f);
-	glBegin(GL_POLYGON);
-		glVertex2f(0, DV);
-		glVertex2f(-DH, 0);
-		glVertex2f(0, -DV);
-		glVertex2f(DH, 0);
-	glEnd();
-	glPopMatrix();
+	if(traveler.travelling)
+	{
+		glPushMatrix();
+		glScalef(0.2f, 0.2f, 1.f);
+		glBegin(GL_POLYGON);
+			glVertex2f(0, DV);
+			glVertex2f(-DH, 0);
+			glVertex2f(0, -DV);
+			glVertex2f(DH, 0);
+		glEnd();
+		glPopMatrix();
+	}
 	if (traveler.segmentList.size() > 1)
 	{
 		for (unsigned int currSegIndex=0; currSegIndex<traveler.segmentList.size()-1; currSegIndex++)
