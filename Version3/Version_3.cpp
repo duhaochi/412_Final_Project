@@ -74,6 +74,7 @@ uniform_int_distribution<unsigned int> colGenerator;
 void* create_travelers(void*);
 void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
+void initialize_travelers();
 //==================================================================================
 
 //===============================virables I added==================================
@@ -344,8 +345,9 @@ void initialize_travelers(){
         travelerList.push_back(traveler);
         travelerList[i].index = i;
         travelerList[i].travelling = true;
+		travelerList[i].move_counter = 0;
 
-        float** travelerColor = createTravelerColors(numTravelers);
+		float** travelerColor = createTravelerColors(numTravelers);
     
         TravelerSegment newSeg;
         // HARDCODING START POINT
@@ -380,7 +382,7 @@ void initialize_travelers(){
 }
 
 void* create_travelers(void*){
-    //creating all the travlers
+    //creating all the travlers-
     thread_array = new ThreadInfo[numTravelers];
     //creating all the travlers thread
     for (int i = 0; i < numTravelers; i++) {
@@ -567,7 +569,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
      *        without it, program will keep popping.
      * 
      */
-    if (travelerList[index].move_counter<growSegAfterNumOfMove  && growTail){
+    if (travelerList[index].move_counter<growSegAfterNumOfMove && growTail){
         //free square
 		grid[travelerList[index].segmentList.back().row][travelerList[index].segmentList.back().col] = FREE_SQUARE;
         travelerList[index].segmentList.pop_back();
