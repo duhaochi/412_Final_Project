@@ -1,10 +1,14 @@
 //
-//  main.c
-//  Final Project CSC412
+//  Version_4.cpp
+//  final_pro
 //
-//  Created by Jean-Yves Hervé on 2020-12-01
-//    This is public domain code.  By all means appropriate it and change is to your
-//    heart's content.
+//  Created by duhaochi on 12/18/20.
+//  Copyright © 2020 duhaochi. All rights reserved.
+//
+
+#include <stdio.h>
+
+
 #include <iostream>
 #include <string>
 #include <random>
@@ -75,6 +79,7 @@ void* create_travelers(void*);
 void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
 void initialize_travelers();
+void movePartition(int partition_index);
 //==================================================================================
 
 //===============================virables I added==================================
@@ -91,7 +96,8 @@ typedef struct ThreadInfo
 } ThreadInfo;
 
 static pthread_mutex_t LOCK;
-
+//indecate which traveler you have control over;
+int traveler_control_index = 0;
 ThreadInfo* thread_array;
 
 //==================================================================================
@@ -114,10 +120,10 @@ void drawTravelers(void)
         //    here I would test if the traveler thread is still live
         if(travelerList[k].segmentList.size() > 0){
             pthread_mutex_lock(&LOCK);
-		    drawTraveler(travelerList[k]);
-			pthread_mutex_unlock(&LOCK);
-		}
-	}
+            drawTraveler(travelerList[k]);
+            pthread_mutex_unlock(&LOCK);
+        }
+    }
 }
 
 void updateMessages(void)
@@ -163,7 +169,55 @@ void handleKeyboardEvent(unsigned char c, int x, int y)
             speedupTravelers();
             ok = 1;
             break;
-
+        
+        // controling traveler
+        case 'w':
+            moveTraveler(traveler_control_index, NORTH, true);
+            break;
+        case 's':
+            moveTraveler(traveler_control_index, SOUTH, true);
+            break;
+        case 'a':
+            moveTraveler(traveler_control_index, WEST, true);
+            break;
+        case 'd':
+            moveTraveler(traveler_control_index, EAST, true);
+            break;
+        
+        // controling traveler index 0-9
+        case '0':
+            traveler_control_index = 0;
+            break;
+        case '1':
+            traveler_control_index = 1;
+            break;
+        case '2':
+            traveler_control_index = 2;
+            break;
+        case '3':
+            traveler_control_index = 3;
+            break;
+        case '4':
+            traveler_control_index = 4;
+            break;
+        case '5':
+            traveler_control_index = 5;
+            break;
+        case '6':
+            traveler_control_index = 6;
+            break;
+        case '7':
+            traveler_control_index = 7;
+            break;
+        case '8':
+            traveler_control_index = 8;
+            break;
+        case '9':
+            traveler_control_index = 9;
+            break;
+    
+        
+            
         default:
             ok = 1;
             break;
@@ -214,7 +268,7 @@ int main(int argc, char** argv)
     // growSegAfterNumOfMove = 2; // arbitrary setting. can be set to any num
     // numLiveThreads = numTravelers; // Once they finish, thread--;
     // numTravelersDone = 0;  // why is it ZERO? Nobody finishes yet.
-    /* END */ 
+    /* END */
 
 
 
@@ -312,7 +366,7 @@ void initializeApplication(void)
     srand((unsigned int) time(NULL));
 
     //    generate a random exit
-    for (int i=0; i < 150; i++){
+    for (int i=0; i < 2; i++){
         exitPos = getNewFreePosition();
         grid[exitPos.row][exitPos.col] = EXIT;
     }
@@ -329,9 +383,9 @@ void initializeApplication(void)
     //generateWalls();
     //generatePartitions();
 
-	initialize_travelers();
+    initialize_travelers();
 
-	//    Initialize traveler info structs
+    //    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
     pthread_t travelerThread;
     int error_code = pthread_create(&travelerThread, NULL, create_travelers, NULL);
@@ -343,14 +397,14 @@ void initializeApplication(void)
 }
 
 void initialize_travelers(){
-	for (int i = 0; i < numTravelers; i++){
+    for (int i = 0; i < numTravelers; i++){
         Traveler traveler;
         travelerList.push_back(traveler);
         travelerList[i].index = i;
         travelerList[i].travelling = true;
-		travelerList[i].move_counter = 0;
+        travelerList[i].move_counter = 0;
 
-		float** travelerColor = createTravelerColors(numTravelers);
+        float** travelerColor = createTravelerColors(numTravelers);
     
         TravelerSegment newSeg;
         // HARDCODING START POINT
@@ -363,11 +417,11 @@ void initialize_travelers(){
         // if (index ==0 ){
         //     pos.col = 0;
         //     pos.row = 2;
-        // 	dir = EAST;
+        //     dir = EAST;
         // }
         // else
         // {
-        // 	pos.col = 0;
+        //     pos.col = 0;
         //     pos.row = 4;
         //     dir = NORTH;
         // }
@@ -420,8 +474,8 @@ void* player_behaviour(void* traveler_index){
     bool still_travelling = true;
     //    I add 0-n segments to my travelers
     while (still_travelling){
-		TravelerSegment currSeg = travelerList[index].segmentList[0];
-		
+        TravelerSegment currSeg = travelerList[index].segmentList[0];
+        
         // HARDCODED START
         // if(index == 1){
         //     still_travelling = moveTraveler(index, secondThdir.at(temp++), true);
@@ -430,14 +484,16 @@ void* player_behaviour(void* traveler_index){
         //     }
         // }else{
         //     still_travelling = moveTraveler(index, dir, true);
-        // }		
+        // }
         // HARDCODED END
 
         // UNCOMMENT THIS ONCE IT'S WORKING
-        pthread_mutex_lock(&LOCK);
-        still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
-        pthread_mutex_unlock(&LOCK);
-        sleep(1);
+        if (index != traveler_control_index){
+            pthread_mutex_lock(&LOCK);
+            still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
+            pthread_mutex_unlock(&LOCK);
+            sleep(1);
+        }
     }
 
     numLiveThreads--;
@@ -487,14 +543,13 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                                                 travelerList[index].segmentList[0].col,
                                                 NORTH};
 
-
                     travelerList[index].segmentList.push_front(newSeg);
                     travelerList[index].move_counter += 1;
-					grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
-				}else{
-					growTail = false;
-				}
-			}
+                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                }else{
+                    growTail = false;
+                }
+            }
             break;
 
             case WEST: {
@@ -536,7 +591,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == EXIT){
                     travelerList[index].travelling = false;
                     return true;
-                } 
+                }
                 if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
                     TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
                                                 travelerList[index].segmentList[0].col,
@@ -546,7 +601,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                     grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                 }else{
                     growTail = false;
-                } 
+                }
             }
             break;
             default:
@@ -556,13 +611,13 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
         } //switch end
     }// if travelling block
     else{
-        if(travelerList[index].segmentList.size() > 0){         
-		    grid[travelerList[index].segmentList.back().row][travelerList[index].segmentList.back().col] = FREE_SQUARE;
+        if(travelerList[index].segmentList.size() > 0){
+            grid[travelerList[index].segmentList.back().row][travelerList[index].segmentList.back().col] = FREE_SQUARE;
             travelerList[index].segmentList.pop_back();
             return true;
         }else{
             return false;
-        }   
+        }
 
     }
 
@@ -572,20 +627,23 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
      *              tail should be poped.
      *        growTail is guarding for when traveler cannot move, don't pop seg.
      *        without it, program will keep popping.
-     * 
+     *
      */
     if (travelerList[index].move_counter<growSegAfterNumOfMove && growTail){
         //free square
-		grid[travelerList[index].segmentList.back().row][travelerList[index].segmentList.back().col] = FREE_SQUARE;
+        grid[travelerList[index].segmentList.back().row][travelerList[index].segmentList.back().col] = FREE_SQUARE;
         travelerList[index].segmentList.pop_back();
-	}
-	else if(travelerList[index].move_counter == growSegAfterNumOfMove)
-	{
-		travelerList[index].move_counter = 0;
-	}
-	return true;
+    }
+    else if(travelerList[index].move_counter == growSegAfterNumOfMove)
+    {
+        travelerList[index].move_counter = 0;
+    }
+    return true;
 }
-    
+
+
+
+
 //------------------------------------------------------
 #if 0
 #pragma mark -
