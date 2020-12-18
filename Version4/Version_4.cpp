@@ -508,6 +508,12 @@ void* player_behaviour(void* traveler_index){
 
 bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 {
+    //pervent seg fault
+    if(index >= numTravelers){
+        printf("player index does not exist\n");
+        return false;
+    }
+    
     /*
         Return True or False:
             True == Traveler is still travelling.
