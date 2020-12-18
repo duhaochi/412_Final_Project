@@ -4,9 +4,13 @@ ATTEND OFFICE HOUR
     Friday:     12:00 P.M. to 2:00 P.M. (12/18/2020)
 
 As of
-    When there is no free space on the grid, segment fault.
+
+    When there is no free space on the grid, segment fault. (Version 3 took care of it)
     When no argument is provided, the grid keep filling and program gives seg fault.
     When traveller are larger than the grid, 
+
+    INT_MAX needs to be implemented.
+    Version 2 need to Spawn travelers like Version3. Need to copy and compare
 
 
 FINALLIZE VERSION 1 & 2 by end of the day.
@@ -30,5 +34,12 @@ FINALLIZE VERSION 1 & 2 by end of the day.
             When do we do?
         
     ASSUMTION
-        program expect user to provide numeric string type.
-        The traveler do not 
+        * program expect user to provide numeric string type.
+        * number of threads cannot exceed the free amount grid (has to consider walls and partitions)
+
+
+
+
+REPORT FINDING
+    V2 Vs V3 
+        no walls, no partitions generated given the exact occupants in V2 will not run because there is no lock
