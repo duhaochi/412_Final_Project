@@ -112,9 +112,12 @@ void drawTravelers(void)
     for (unsigned int k=0; k<travelerList.size(); k++)
     {
         //    here I would test if the traveler thread is still live
-        if(travelerList[k].segmentList.size() > 0)
-            drawTraveler(travelerList[k]);
-    }
+        if(travelerList[k].segmentList.size() > 0){
+            pthread_mutex_lock(&LOCK);
+		    drawTraveler(travelerList[k]);
+			pthread_mutex_unlock(&LOCK);
+		}
+	}
 }
 
 void updateMessages(void)
@@ -323,8 +326,8 @@ void initializeApplication(void)
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    generateWalls();
-    generatePartitions();
+    //generateWalls();
+    //generatePartitions();
 
 	initialize_travelers();
 
@@ -483,6 +486,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                     TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
                                                 travelerList[index].segmentList[0].col,
                                                 NORTH};
+
                     travelerList[index].segmentList.push_front(newSeg);
                     travelerList[index].move_counter += 1;
 					grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
