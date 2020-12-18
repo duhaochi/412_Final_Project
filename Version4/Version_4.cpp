@@ -78,6 +78,7 @@ uniform_int_distribution<unsigned int> colGenerator;
 void* create_travelers(void*);
 void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
+void initialize_locks();
 void initialize_travelers();
 void movePartition(int partition_index);
 //==================================================================================
@@ -95,6 +96,9 @@ typedef struct ThreadInfo
     
 } ThreadInfo;
 
+vector<pthread_mutex_t> travelers_locks;
+
+// pthread_mutex_t Lock[array size];
 static pthread_mutex_t LOCK;
 //indecate which traveler you have control over;
 int traveler_control_index = 0;
@@ -382,10 +386,10 @@ void initializeApplication(void)
     //_______________________________________in version one here i disable all the wall generation
     //generateWalls();
     //generatePartitions();
+	initialize_locks();
+	initialize_travelers();
 
-    initialize_travelers();
-
-    //    Initialize traveler info structs
+	//    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
     pthread_t travelerThread;
     int error_code = pthread_create(&travelerThread, NULL, create_travelers, NULL);
@@ -394,6 +398,14 @@ void initializeApplication(void)
         printf("ERROR: Failed to create create_travelers thread %d\n", error_code);
     }
     //    free array of colors
+}
+
+void initialize_locks(){
+	for (int i = 0; i < numTravelers; i++){
+		pthread_mutex_t LOCKs;
+		pthread_mutex_init(&LOCKs, NULL);
+		travelers_locks.push_back(LOCKs);
+	}
 }
 
 void initialize_travelers(){
@@ -533,9 +545,9 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
         switch (dir)
         {
 
-                // [ 0 0 0 0
-                //   0 X 0 0
-                //   0 1 0 0
+                // [ 0 0 1 0 0 0
+                //   0 X 0 0 0 0
+                //   0 1 0 0 0 0
                 // ]
             case NORTH: {
                 if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == EXIT){
