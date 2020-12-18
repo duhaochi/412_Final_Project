@@ -251,7 +251,7 @@ int main(int argc, char** argv)
     //    we set up earlier will be called when the corresponding event
     //    occurs
     
-    sleep(1);
+    //sleep(1);
     glutMainLoop();
     
     //    Free allocated resource before leaving (not absolutely needed, but
@@ -322,10 +322,12 @@ void initializeApplication(void)
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
-    
-    //    Initialize traveler info structs
+    generateWalls();
+    generatePartitions();
+
+	initialize_travelers();
+
+	//    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
     pthread_t travelerThread;
     int error_code = pthread_create(&travelerThread, NULL, create_travelers, NULL);
@@ -336,6 +338,46 @@ void initializeApplication(void)
     //    free array of colors
 }
 
+void initialize_travelers(){
+	for (int i = 0; i < numTravelers; i++){
+        Traveler traveler;
+        travelerList.push_back(traveler);
+        travelerList[i].index = i;
+        travelerList[i].travelling = true;
+
+        float** travelerColor = createTravelerColors(numTravelers);
+    
+        TravelerSegment newSeg;
+        // HARDCODING START POINT
+        GridPosition pos = getNewFreePosition();
+        //    Note that treating an enum as a sort of integer is increasingly
+        //    frowned upon, as C++ versions progress
+        Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
+        // Direction dir;
+        // GridPosition pos;
+        // if (index ==0 ){
+        //     pos.col = 0;
+        //     pos.row = 2;
+        // 	dir = EAST;
+        // }
+        // else
+        // {
+        // 	pos.col = 0;
+        //     pos.row = 4;
+        //     dir = NORTH;
+        // }
+
+        TravelerSegment seg = {pos.row, pos.col, dir};
+        travelerList[i].segmentList.push_back(seg);
+
+        for (unsigned int c=0; c<4; c++){
+            travelerList[i].rgba[c] = travelerColor[i][c];
+        }
+
+        grid[pos.row][pos.col] = TRAVELER;
+    
+    }
+}
 
 void* create_travelers(void*){
     //creating all the travlers
@@ -356,49 +398,14 @@ void* create_travelers(void*){
 }
 
 void* player_behaviour(void* traveler_index){
-    Traveler traveler;
-    
-    travelerList.push_back(traveler);
-    
+
     ThreadInfo* traveler_thread = (ThreadInfo*) traveler_index;
     int index = traveler_thread->threadIndex;
-    
-    travelerList[index].index = index;
-    travelerList[index].travelling = true;
-    
-    float** travelerColor = createTravelerColors(numTravelers);
-    
-    TravelerSegment newSeg;
-    // HARDCODING START POINT
-    GridPosition pos = getNewFreePosition();
-    //    Note that treating an enum as a sort of integer is increasingly
-    //    frowned upon, as C++ versions progress
-    Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
-	// Direction dir;
-	// GridPosition pos;
-	// if (index ==0 ){
-    //     pos.col = 0;
-    //     pos.row = 2;
-	// 	dir = EAST;
-	// }
-	// else
-	// {
-	// 	pos.col = 0;
-    //     pos.row = 4;
-    //     dir = NORTH;
-	// }
 
-    TravelerSegment seg = {pos.row, pos.col, dir};
-    travelerList[index].segmentList.push_back(seg);
 
-    grid[pos.row][pos.col] = TRAVELER;
-    cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
-    pos.col << "), direction: " << dirStr(dir) <<  endl;
-    cout << "\t";
-
-    for (unsigned int c=0; c<4; c++){
-        travelerList[index].rgba[c] = travelerColor[travelerList[traveler_thread->threadIndex].index][c];
-    }
+    //cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
+    //pos.col << "), direction: " << dirStr(dir) <<  endl;
+    //cout << "\t";
 
     // HARDCODED START
     // vector<Direction> secondThdir = { NORTH, NORTH, NORTH, NORTH, EAST, SOUTH,SOUTH, SOUTH, SOUTH, WEST};
@@ -431,9 +438,9 @@ void* player_behaviour(void* traveler_index){
     numLiveThreads--;
     numTravelersDone++;
     
-    for (unsigned int k=0; k<numTravelers; k++)
-        delete []travelerColor[k];
-    delete []travelerColor;
+    //for (unsigned int k=0; k<numTravelers; k++)
+    //   delete []travelerColor[k];
+    //delete []travelerColor;
     
     return NULL;
 }
