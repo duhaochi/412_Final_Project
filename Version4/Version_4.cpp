@@ -80,6 +80,10 @@ void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
 void initialize_travelers();
 void movePartition(int partition_index);
+
+
+bool movePartition(int partition_index,GridPosition traveler_current_position);
+int search_partition_index(int row, int col);
 //==================================================================================
 
 //===============================virables I added==================================
@@ -96,6 +100,7 @@ typedef struct ThreadInfo
 } ThreadInfo;
 
 static pthread_mutex_t LOCK;
+deque<pthread_mutex_t> segmentLocks;
 //indecate which traveler you have control over;
 int traveler_control_index = 0;
 ThreadInfo* thread_array;
@@ -380,8 +385,8 @@ void initializeApplication(void)
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
+    generateWalls();
+    generatePartitions();
 
     initialize_travelers();
 
@@ -513,17 +518,19 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
         printf("player index does not exist\n");
         return false;
     }
-    
+    GridPosition travelerPosition;
+    travelerPosition.row = travelerList[index].segmentList[0].row;
+    travelerPosition.col = travelerList[index].segmentList[0].col;
     /*
         Return True or False:
             True == Traveler is still travelling.
             False == Traveler reached EXIT.
     */
-    cout << "Moving traveler " << index << " at (" <<
-            travelerList[index].segmentList[0].row << ", " <<
-            travelerList[index].segmentList[0].col << ", " <<
-            dirStr(travelerList[index].segmentList[0].dir) << ")" <<
-            " in direction: " << dirStr(dir) << endl;
+//    cout << "Moving traveler " << index << " at (" <<
+//            travelerList[index].segmentList[0].row << ", " <<
+//            travelerList[index].segmentList[0].col << ", " <<
+//            dirStr(travelerList[index].segmentList[0].dir) << ")" <<
+//            " in direction: " << dirStr(dir) << endl;
     // no testing
 
   
@@ -543,15 +550,33 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                     return true;
                 }
 
-                if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == FREE_SQUARE)
+                if (travelerList[index].segmentList[0].row > 0 && (grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == FREE_SQUARE || grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == HORIZONTAL_PARTITION))
                 {
-                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
-                                                travelerList[index].segmentList[0].col,
-                                                NORTH};
+                    //here I put the version 4 lock
+                    if (grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
+                        TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
+                                                    travelerList[index].segmentList[0].col,
+                                                    NORTH};
 
-                    travelerList[index].segmentList.push_front(newSeg);
-                    travelerList[index].move_counter += 1;
-                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                        travelerList[index].segmentList.push_front(newSeg);
+                        travelerList[index].move_counter += 1;
+                        grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                    }else{
+                        // if the moving dir is a partition
+                        bool moved = movePartition(search_partition_index(travelerList[index].segmentList[0].row-1, travelerList[index].segmentList[0].col), travelerPosition);
+                        if(moved){
+                            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
+                                                        travelerList[index].segmentList[0].col,
+                                                        NORTH};
+
+                            travelerList[index].segmentList.push_front(newSeg);
+                            travelerList[index].move_counter += 1;
+                            grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                        }else{
+                            growTail = false;
+                        }
+                    }
+
                 }else{
                     growTail = false;
                 }
@@ -563,30 +588,63 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                     travelerList[index].travelling = false;
                     return true;
                 }
-                if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE) {
-                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
-                                                travelerList[index].segmentList[0].col-1,
-                                                WEST};
-                    travelerList[index].segmentList.push_front(newSeg);
-                    travelerList[index].move_counter += 1;
-                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                if (travelerList[index].segmentList[0].col > 0 && (grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE || grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == VERTICAL_PARTITION)) {
+                    if (grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE) {
+                        TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                                    travelerList[index].segmentList[0].col-1,
+                                                    WEST};
+                        travelerList[index].segmentList.push_front(newSeg);
+                        travelerList[index].move_counter += 1;
+                        grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                        printf("should not be here\n");
+                    }else{
+                        bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col-1), travelerPosition);
+                        if(moved){
+                            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                                        travelerList[index].segmentList[0].col-1,
+                                                        WEST};
+                            travelerList[index].segmentList.push_front(newSeg);
+                            travelerList[index].move_counter += 1;
+                            grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                        }else{
+                            growTail = false;
+                        }
+                        printf("should walk into partition\n");
+                    }
+                    
                 }else{
                     growTail = false;
                 }
             }
             break;
+    
             case EAST: {
                 if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == EXIT){
                     travelerList[index].travelling = false;
                     return true;
                 }
-                if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE){
-                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
-                                                travelerList[index].segmentList[0].col+1,
-                                                EAST};
-                    travelerList[index].segmentList.push_front(newSeg);
-                    travelerList[index].move_counter += 1;
-                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                if(travelerList[index].segmentList[0].col < numCols-1 && (grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE || grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == VERTICAL_PARTITION)){
+                    if(grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE){
+                        TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                            travelerList[index].segmentList[0].col+1,
+                            EAST};
+                        travelerList[index].segmentList.push_front(newSeg);
+                        travelerList[index].move_counter += 1;
+                        grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                    }else{
+                        bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col+1), travelerPosition);
+                        if(moved){
+                            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
+                                                        travelerList[index].segmentList[0].col+1,
+                                                        EAST};
+                            travelerList[index].segmentList.push_front(newSeg);
+                            travelerList[index].move_counter += 1;
+                            grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                        }else{
+                            growTail = false;
+                        }
+                    }
+                    
                 }else{
                     growTail = false;
                 }
@@ -645,6 +703,126 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
         travelerList[index].move_counter = 0;
     }
     return true;
+}
+
+
+int search_partition_index(int row, int col){
+    printf("searching index %d\n", partitionList.size());
+    bool vertical;
+    bool not_found = true;
+    int index = 0;
+    //see if it is a vertical or horizontal partition to shorten the search time
+    if (grid[row][col] == VERTICAL_PARTITION){
+        vertical = true;
+    }else{
+        vertical = false;
+    }
+
+    for(int i = 0; i < partitionList.size(); i++){
+        int j =0;
+        if (vertical && partitionList[i].isVertical && partitionList[i].blockList[0].col == col && not_found) {
+            while(j < partitionList[i].blockList.size() && not_found){
+                if (partitionList[i].blockList[j].row == row) {
+                    not_found = false;
+                    index = i;
+                }
+                j++;
+            }
+        }else if(!vertical && !partitionList[i].isVertical && partitionList[i].blockList[0].row == row && not_found){
+            while(j < partitionList[i].blockList.size() && not_found){
+                if (partitionList[i].blockList[j].col == col) {
+                    not_found = false;
+                    index = i;
+                }
+                j++;
+            }
+        }
+    }
+    for(int i = 0; i < 5;i++){
+        printf("row: %d, col: %d\n", partitionList[index].blockList[i].row, partitionList[index].blockList[i].col);
+    }
+    printf("found index at %d\n", index);
+    return index;
+}
+
+bool movePartition(int partition_index,GridPosition traveler_current_position){
+    bool movable = true;
+    int row = partitionList[partition_index].blockList[0].row;
+    int col = partitionList[partition_index].blockList[0].col;
+    int length = partitionList[partition_index].blockList.size();
+    // if partition is vertical I only have to work with rows here, cols will always be the same
+    if(partitionList[partition_index].isVertical){
+        //can i move partition up?
+        printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+        int moves_counter = partitionList[partition_index].blockList[length-1].row+1 - traveler_current_position.row;
+        if(partitionList[partition_index].blockList[0].row >= moves_counter){
+            for(int i = 1; i <= moves_counter; i++){
+                if (grid[partitionList[partition_index].blockList[0].row - i][col] != FREE_SQUARE){
+                    movable = false;
+                }
+                printf("checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row - i, col);
+            }
+            printf("done checking\n");
+            //if I can I will
+            printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+            if(movable){
+                for(int i = 1; i <= moves_counter; i++){
+                    printf("moving up\n");
+                    GridPosition Gpos;
+                    int new_row = partitionList[partition_index].blockList[0].row - 1;
+                    Gpos.row = new_row;
+                    Gpos.col = col;
+                    grid[new_row][col] = VERTICAL_PARTITION;
+                    grid[partitionList[partition_index].blockList[length-1].row][col] = FREE_SQUARE;
+                    
+                    partitionList[partition_index].blockList.push_front(Gpos);
+                    partitionList[partition_index].blockList.pop_back();
+                    printf("finished moving up%d\n",i);
+                }
+            }
+        }else{
+            movable=false;
+        }
+        //if can't be moved up, then I will check if  I move partition down?
+        if(!movable){
+            movable = true;
+            int moves_counter = traveler_current_position.row+1 - partitionList[partition_index].blockList[0].row;
+            if (moves_counter < numRows - partitionList[partition_index].blockList[length-1].row) {
+                printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+                for(int i = 1; i <= moves_counter; i++){
+                    printf("%d\n",moves_counter);
+                    if (grid[partitionList[partition_index].blockList[length-1].row + i][col] != FREE_SQUARE){
+                        movable = false;
+                    }
+                    printf("down -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[length-1].row + i, col);
+                }
+                printf("down -> done checking\n");
+                if(movable){
+                    for(int i = 1; i <= moves_counter; i++){
+                        printf("moving down\n");
+                        GridPosition Gpos;
+                        int new_row = partitionList[partition_index].blockList[length-1].row + 1;
+                        Gpos.row = new_row;
+                        Gpos.col = col;
+                        
+                        partitionList[partition_index].blockList.push_back(Gpos);
+                        grid[new_row][col] = VERTICAL_PARTITION;
+                        grid[partitionList[partition_index].blockList[0].row][col] = FREE_SQUARE;
+                        
+                        partitionList[partition_index].blockList.pop_front();
+                        printf("finished moving down\n");
+                    }
+                }
+            }else{
+                movable = false;
+            }
+        }
+    // if partition is horizontal
+    }else{
+        //implement later
+        movable = false;
+    }
+    return movable;
 }
 
 
@@ -866,6 +1044,7 @@ void generateWalls(void)
                     for (unsigned int col=startCol, i=0; i<length && goodWall; i++, col++)
                     {
                         grid[row][col] = WALL;
+                        
                     }
                 }
             }
@@ -924,8 +1103,13 @@ void generatePartitions(void)
                         grid[row][col] = VERTICAL_PARTITION;
                         GridPosition pos = {row, col};
                         part.blockList.push_back(pos);
+                        
                     }
+                    partitionList.push_back(part);
                 }
+                
+                
+                
             }
         }
         // case of a horizontal partition
@@ -963,6 +1147,7 @@ void generatePartitions(void)
                         GridPosition pos = {row, col};
                         part.blockList.push_back(pos);
                     }
+                    partitionList.push_back(part);
                 }
             }
         }
