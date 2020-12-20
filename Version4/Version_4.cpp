@@ -79,6 +79,7 @@ void* create_travelers(void*);
 void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
 void initialize_travelers();
+void initialize_segLocks();
 void movePartition(int partition_index);
 
 
@@ -124,9 +125,10 @@ void drawTravelers(void)
     {
         //    here I would test if the traveler thread is still live
         if(travelerList[k].segmentList.size() > 0){
-            pthread_mutex_lock(&LOCK);
+            //version4 locks
+            pthread_mutex_lock(&segmentLocks[k]);
             drawTraveler(travelerList[k]);
-            pthread_mutex_unlock(&LOCK);
+            pthread_mutex_unlock(&segmentLocks[k]);
         }
     }
 }
@@ -387,7 +389,7 @@ void initializeApplication(void)
     //_______________________________________in version one here i disable all the wall generation
     generateWalls();
     generatePartitions();
-
+    initialize_segLocks();
     initialize_travelers();
 
     //    Initialize traveler info structs
@@ -399,6 +401,14 @@ void initializeApplication(void)
         printf("ERROR: Failed to create create_travelers thread %d\n", error_code);
     }
     //    free array of colors
+}
+
+void initialize_segLocks(){
+    for (int i = 0; i < numTravelers; i++){
+        pthread_mutex_t lock;
+        pthread_mutex_init(&lock, NULL);
+        segmentLocks.push_back(lock);
+    }
 }
 
 void initialize_travelers(){
@@ -455,9 +465,8 @@ void* create_travelers(void*){
             printf("ERROR: Failed to create thread %d with error_code=%d\n", i, error_code);
         }
         //make this number bigger if seg falut happens when creating muiltiple traveler
-        usleep(10000);
+        usleep(100);
     }
-    
     return NULL;
 }
 
@@ -557,8 +566,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
                                                     travelerList[index].segmentList[0].col,
                                                     NORTH};
-
+                        //version4 locks
+                        pthread_mutex_lock(&segmentLocks[index]);
                         travelerList[index].segmentList.push_front(newSeg);
+                        pthread_mutex_unlock(&segmentLocks[index]);
+                        //--------------
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
@@ -569,7 +581,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                                                         travelerList[index].segmentList[0].col,
                                                         NORTH};
 
+                            //version4 locks
+                            pthread_mutex_lock(&segmentLocks[index]);
                             travelerList[index].segmentList.push_front(newSeg);
+                            pthread_mutex_unlock(&segmentLocks[index]);
+                            //---------------
                             travelerList[index].move_counter += 1;
                             grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                         }else{
@@ -593,7 +609,13 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                     travelerList[index].segmentList[0].col-1,
                                                     WEST};
+                        //version4 locks
+                        pthread_mutex_lock(&segmentLocks[index]);
                         travelerList[index].segmentList.push_front(newSeg);
+                        pthread_mutex_unlock(&segmentLocks[index]);
+                        //---------------
+                        
+                        
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                         printf("should not be here\n");
@@ -603,7 +625,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                         travelerList[index].segmentList[0].col-1,
                                                         WEST};
+                            //version4 locks
+                            pthread_mutex_lock(&segmentLocks[index]);
                             travelerList[index].segmentList.push_front(newSeg);
+                            pthread_mutex_unlock(&segmentLocks[index]);
+                            //---------------
                             travelerList[index].move_counter += 1;
                             grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                         }else{
@@ -628,7 +654,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                             travelerList[index].segmentList[0].col+1,
                             EAST};
+                        //version4 locks
+                        pthread_mutex_lock(&segmentLocks[index]);
                         travelerList[index].segmentList.push_front(newSeg);
+                        pthread_mutex_unlock(&segmentLocks[index]);
+                        //---------------
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
@@ -637,7 +667,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                         travelerList[index].segmentList[0].col+1,
                                                         EAST};
+                            //version4 locks
+                            pthread_mutex_lock(&segmentLocks[index]);
                             travelerList[index].segmentList.push_front(newSeg);
+                            pthread_mutex_unlock(&segmentLocks[index]);
+                            //---------------
                             travelerList[index].move_counter += 1;
                             grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                         }else{
@@ -664,7 +698,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                                                     travelerList[index].segmentList[0].col,
                                                     SOUTH};
                         
+                        //version4 locks
+                        pthread_mutex_lock(&segmentLocks[index]);
                         travelerList[index].segmentList.push_front(newSeg);
+                        pthread_mutex_unlock(&segmentLocks[index]);
+                        //---------------
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
@@ -673,7 +711,12 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
                                                         travelerList[index].segmentList[0].col,
                                                         SOUTH};
+                            //version4 locks
+                            pthread_mutex_lock(&segmentLocks[index]);
                             travelerList[index].segmentList.push_front(newSeg);
+                            pthread_mutex_unlock(&segmentLocks[index]);
+                            //---------------
+                            
                             travelerList[index].move_counter += 1;
                             grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                         }else{
@@ -723,7 +766,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
     return true;
 }
 
-
+//this function finds the index of a partition, given one of it's segments
 int search_partition_index(int row, int col){
     printf("searching index %d\n", partitionList.size());
     bool vertical;
@@ -762,6 +805,9 @@ int search_partition_index(int row, int col){
     printf("found index at %d\n", index);
     return index;
 }
+
+//returns true if the segment is moved so the traveler can move into it,
+//returns false if the segment is not moveable so the traveler will seek for new position to move to/
 
 bool movePartition(int partition_index,GridPosition traveler_current_position){
     bool movable = true;
