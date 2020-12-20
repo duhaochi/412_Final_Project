@@ -656,13 +656,31 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                     travelerList[index].travelling = false;
                     return true;
                 }
-                if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
-                    TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
-                                                travelerList[index].segmentList[0].col,
-                                                SOUTH};
-                    travelerList[index].segmentList.push_front(newSeg);
-                    travelerList[index].move_counter += 1;
-                    grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                if (travelerList[index].segmentList[0].row < numRows-1 && (grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE ||
+                    grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == HORIZONTAL_PARTITION)) {
+                    
+                    if (grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE) {
+                        TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
+                                                    travelerList[index].segmentList[0].col,
+                                                    SOUTH};
+                        
+                        travelerList[index].segmentList.push_front(newSeg);
+                        travelerList[index].move_counter += 1;
+                        grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                    }else{
+                        bool moved = movePartition(search_partition_index(travelerPosition.row+1, travelerPosition.col), travelerPosition);
+                        if(moved){
+                            TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
+                                                        travelerList[index].segmentList[0].col,
+                                                        SOUTH};
+                            travelerList[index].segmentList.push_front(newSeg);
+                            travelerList[index].move_counter += 1;
+                            grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
+                        }else{
+                            growTail = false;
+                        }
+                    }
+                
                 }else{
                     growTail = false;
                 }
@@ -819,9 +837,73 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
         }
     // if partition is horizontal
     }else{
-        //implement later
-        movable = false;
+        //first can I move left?
+        int moves_counter = partitionList[partition_index].blockList[length-1].col+1 - traveler_current_position.col;
+        if(partitionList[partition_index].blockList[0].col >= moves_counter){
+            for(int i = 1; i <= moves_counter; i++){
+                if (grid[partitionList[partition_index].blockList[0].row][col-i] != FREE_SQUARE){
+                    movable = false;
+                }
+                printf("left -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row, col - i);
+            }
+            printf("done checking\n");
+            //if I can I will
+            printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+            if(movable){
+                for(int i = 1; i <= moves_counter; i++){
+                    printf("moving up\n");
+                    GridPosition Gpos;
+                    int new_col = partitionList[partition_index].blockList[0].col - 1;
+                    Gpos.row = row;
+                    Gpos.col = new_col;
+                    grid[row][new_col] = HORIZONTAL_PARTITION;
+                    grid[row][partitionList[partition_index].blockList[length-1].col] = FREE_SQUARE;
+                    
+                    partitionList[partition_index].blockList.push_front(Gpos);
+                    partitionList[partition_index].blockList.pop_back();
+                    printf("finished moving up%d\n",i);
+                }
+            }
+        }else{
+            movable = false;
+        }
+        //check if i can move right
+        if(!movable){
+            movable = true;
+            int moves_counter = traveler_current_position.col+1 - partitionList[partition_index].blockList[0].col;
+            if (moves_counter < numCols - partitionList[partition_index].blockList[length-1].col) {
+                printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+                for(int i = 1; i <= moves_counter; i++){
+                    printf("%d\n",moves_counter);
+                    if (grid[row][partitionList[partition_index].blockList[length-1].col + i] != FREE_SQUARE){
+                        movable = false;
+                        printf("ops\n");
+                    }
+                    printf("right -> checking row: %d, col:%d\n", row, partitionList[partition_index].blockList[length-1].col + i);
+                }
+                printf("right -> done checking\n");
+                if(movable){
+                    for(int i = 1; i <= moves_counter; i++){
+                        printf("moving down\n");
+                        GridPosition Gpos;
+                        int new_col = partitionList[partition_index].blockList[length-1].col + 1;
+                        Gpos.col = new_col;
+                        Gpos.row = row;
+                        
+                        partitionList[partition_index].blockList.push_back(Gpos);
+                        grid[row][new_col] = HORIZONTAL_PARTITION;
+                        grid[row][partitionList[partition_index].blockList[0].col] = FREE_SQUARE;
+                        
+                        partitionList[partition_index].blockList.pop_front();
+                        printf("finished moving down\n");
+                    }
+                }
+            }else{
+                movable = false;
+            }
+        }
     }
+        
     return movable;
 }
 
