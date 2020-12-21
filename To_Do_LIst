@@ -32,7 +32,16 @@ FINALLIZE VERSION 1 & 2 by end of the day.
         col 12;
         once all the traveler exited,
             When do we do?
-        
+
+    V4 & 5
+        Per Prof., 
+            Locking and unlocking happen twice
+            when you look at it "LOCK", done looking "UNLOCK"
+            moving in "LOCK" ,done moving in "UNLOCK"    
+
+            Question is when you unclock it after done looking  and "UNLOCK"
+                    SOMEBODY can come into that spot.
+                    Should it not be one continuciouly locked until moved in?
     ASSUMTION
         * program expect user to provide numeric string type.
         * number of threads cannot exceed the free amount grid (has to consider walls and partitions)
