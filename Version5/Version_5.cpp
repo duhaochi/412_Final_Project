@@ -589,7 +589,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
     // no testing
 
   
-
+    bool locked = true;
     if (travelerList[index].travelling){
 
         switch (dir)
@@ -605,7 +605,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 // lock[i][j] here&
                 // lock this 
                 //      grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col
-				pthread_mutex_lock(&grid_locks[travelerList[index].segmentList[0].row - 1][travelerList[index].segmentList[0].col]);
+                if (travelerList[index].segmentList[0].row > 0){
+                    pthread_mutex_lock(&grid_locks[travelerList[index].segmentList[0].row - 1][travelerList[index].segmentList[0].col]);
+                }else{
+                    locked = false;
+                }
 				if (travelerList[index].segmentList[0].row > 0 && (grid[travelerList[index].segmentList[0].row - 1][travelerList[index].segmentList[0].col] == FREE_SQUARE || grid[travelerList[index].segmentList[0].row - 1][travelerList[index].segmentList[0].col] == HORIZONTAL_PARTITION))
 				{
 					//here I put the version 4 lock
@@ -645,7 +649,9 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 					growTail = false;
 				}
 				//unlock here
-                pthread_mutex_unlock(&grid_locks[travelerList[index].segmentList[0].row - 1][travelerList[index].segmentList[0].col]);
+                if (travelerList[index].segmentList[0].row >= 0 && locked){
+                    pthread_mutex_unlock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col]);
+                }
             }
             break;
 
@@ -653,6 +659,12 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 if (travelerList[index].segmentList[0].col > 0 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == EXIT){
                     travelerList[index].travelling = false;
                     return true;
+                }
+
+                if (travelerList[index].segmentList[0].col > 0){
+                    pthread_mutex_lock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col - 1]);
+                }else{
+                    locked = false;
                 }
                 if (travelerList[index].segmentList[0].col > 0 && (grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE || grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == VERTICAL_PARTITION)) {
                     if (grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col-1] == FREE_SQUARE) {
@@ -691,6 +703,10 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 }else{
                     growTail = false;
                 }
+
+                if (travelerList[index].segmentList[0].col >= 0 && locked){
+                    pthread_mutex_unlock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col]);
+                }
             }
             break;
     
@@ -698,6 +714,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 if(travelerList[index].segmentList[0].col < numCols-1 && grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == EXIT){
                     travelerList[index].travelling = false;
                     return true;
+                }
+                if (travelerList[index].segmentList[0].col < numCols - 1){
+                    pthread_mutex_lock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col + 1]);
+                }else{
+                    locked = false;
                 }
                 if(travelerList[index].segmentList[0].col < numCols-1 && (grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE || grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == VERTICAL_PARTITION)){
                     if(grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col+1] == FREE_SQUARE){
@@ -732,6 +753,9 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 }else{
                     growTail = false;
                 }
+                if (travelerList[index].segmentList[0].col <= numCols - 1 && locked){
+                    pthread_mutex_unlock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col]);
+                }
             }
             break;
             
@@ -739,6 +763,11 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 if (travelerList[index].segmentList[0].row < numRows-1 && grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == EXIT){
                     travelerList[index].travelling = false;
                     return true;
+                }
+                if (travelerList[index].segmentList[0].row < numRows - 1){
+                    pthread_mutex_lock(&grid_locks[travelerList[index].segmentList[0].row + 1][travelerList[index].segmentList[0].col]);
+                }else{
+                    locked = false;
                 }
                 if (travelerList[index].segmentList[0].row < numRows-1 && (grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == FREE_SQUARE ||
                     grid[travelerList[index].segmentList[0].row+1][travelerList[index].segmentList[0].col] == HORIZONTAL_PARTITION)) {
@@ -776,6 +805,10 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 
                 }else{
                     growTail = false;
+                }
+
+                if (travelerList[index].segmentList[0].row <= numRows - 1 $$ locked){
+                    pthread_mutex_unlock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col]);
                 }
             }
             break;
