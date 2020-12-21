@@ -373,7 +373,7 @@ void initializeApplication(void)
     srand((unsigned int) time(NULL));
 
     //    generate a random exit
-    for (int i=0; i < 2; i++){
+    for (int i=0; i < 50; i++){
         exitPos = getNewFreePosition();
         grid[exitPos.row][exitPos.col] = EXIT;
     }
@@ -507,6 +507,17 @@ void* player_behaviour(void* traveler_index){
             still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
             pthread_mutex_unlock(&LOCK);
             sleep(1);
+            /*
+
+                   [] 
+                ---> []
+                   []
+                    
+                ---> [] <----
+                --->
+                --->
+                --->
+            */
         }
     }
 
