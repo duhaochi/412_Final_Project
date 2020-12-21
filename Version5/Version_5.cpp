@@ -377,7 +377,7 @@ void initializeApplication(void){
     srand((unsigned int) time(NULL));
 
     //    generate a random exit
-    for (int i=0; i < 2; i++){
+    for (int i=0; i < 50; i++){
         exitPos = getNewFreePosition();
         grid[exitPos.row][exitPos.col] = EXIT;
     }
@@ -443,7 +443,6 @@ void initialize_gridLocks(){
 
     */
 
-    printf("Starting Gridlocks\n");
     grid_locks = new pthread_mutex_t*[numRows];
     for (int i = 0; i < numRows; i++){
 		grid_locks[i] = new pthread_mutex_t[numCols];
@@ -454,7 +453,6 @@ void initialize_gridLocks(){
 			grid_locks[i][j] = lock;
 		}
 	}
-	printf("End of Gridlocks\n");
 }
 
 void initialize_travelers(){
@@ -552,7 +550,7 @@ void* player_behaviour(void* traveler_index){
             pthread_mutex_lock(&LOCK);
             still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
             pthread_mutex_unlock(&LOCK);
-            sleep(1);
+            usleep(100000);
         }
     }
 
@@ -687,7 +685,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
-                        printf("should not be here\n");
                     }else{
                         bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col-1), travelerPosition);
                         if(moved){
@@ -704,7 +701,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         }else{
                             growTail = false;
                         }
-                        printf("should walk into partition\n");
                     }
                     
                 }else{
@@ -862,7 +858,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 
 //this function finds the index of a partition, given one of it's segments
 int search_partition_index(int row, int col){
-    printf("searching index %d\n", partitionList.size());
+    //printf("searching index %d\n", partitionList.size());
     bool vertical;
     bool not_found = true;
     int index = 0;
@@ -893,10 +889,10 @@ int search_partition_index(int row, int col){
             }
         }
     }
-    for(int i = 0; i < 5;i++){
-        printf("row: %d, col: %d\n", partitionList[index].blockList[i].row, partitionList[index].blockList[i].col);
-    }
-    printf("found index at %d\n", index);
+    // for(int i = 0; i < 5;i++){
+    //     printf("row: %d, col: %d\n", partitionList[index].blockList[i].row, partitionList[index].blockList[i].col);
+    // }
+    // printf("found index at %d\n", index);
     return index;
 }
 
@@ -928,7 +924,7 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
     // if partition is vertical I only have to work with rows here, cols will always be the same
     if(partitionList[partition_index].isVertical){
         //can i move partition up?
-        printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+        //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
         int moves_counter = partitionList[partition_index].blockList[length-1].row+1 - traveler_current_position.row;
         if(partitionList[partition_index].blockList[0].row >= moves_counter){
         //for loop (locks)
@@ -936,14 +932,14 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                 if (grid[partitionList[partition_index].blockList[0].row - i][col] != FREE_SQUARE){
 					movable = false;
 				}
-				printf("checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row - i, col);
+				//printf("checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row - i, col);
             }
-            printf("done checking\n");
+            //printf("done checking\n");
             //if I can I will
-            printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+            //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
             if(movable){
                 for(int i = 1; i <= moves_counter; i++){
-                    printf("moving up\n");
+                    //printf("moving up\n");
                     GridPosition Gpos;
                     int new_row = partitionList[partition_index].blockList[0].row - 1;
                     Gpos.row = new_row;
@@ -953,7 +949,7 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                     
                     partitionList[partition_index].blockList.push_front(Gpos);
                     partitionList[partition_index].blockList.pop_back();
-                    printf("finished moving up%d\n",i);
+                    //printf("finished moving up%d\n",i);
                 }
             }// movable checked END
             // unlock the grid here??
@@ -967,18 +963,18 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
             int moves_counter = traveler_current_position.row+1 - partitionList[partition_index].blockList[0].row;
             if (moves_counter < numRows - partitionList[partition_index].blockList[length-1].row) {
                 //lock(grids)
-                printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+                //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
                 for(int i = 1; i <= moves_counter; i++){
-                    printf("%d\n",moves_counter);
+                    //printf("%d\n",moves_counter);
                     if (grid[partitionList[partition_index].blockList[length-1].row + i][col] != FREE_SQUARE){
                         movable = false;
                     }
-                    printf("down -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[length-1].row + i, col);
+                    //printf("down -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[length-1].row + i, col);
                 }
-                printf("down -> done checking\n");
+                //printf("down -> done checking\n");
                 if(movable){
                     for(int i = 1; i <= moves_counter; i++){
-                        printf("moving down\n");
+                        //printf("moving down\n");
                         GridPosition Gpos;
                         int new_row = partitionList[partition_index].blockList[length-1].row + 1;
                         Gpos.row = new_row;
@@ -989,7 +985,7 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                         grid[partitionList[partition_index].blockList[0].row][col] = FREE_SQUARE;
                         
                         partitionList[partition_index].blockList.pop_front();
-                        printf("finished moving down\n");
+                        //printf("finished moving down\n");
                     }
                 }// moable check END
                 // UNLOCK GRIND HERE
@@ -1007,14 +1003,14 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                 if (grid[partitionList[partition_index].blockList[0].row][col-i] != FREE_SQUARE){
                     movable = false;
                 }
-                printf("left -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row, col - i);
+                //printf("left -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row, col - i);
             }
-            printf("done checking\n");
+            //printf("done checking\n");
             //if I can I will
-            printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+            //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
             if(movable){
                 for(int i = 1; i <= moves_counter; i++){
-                    printf("moving up\n");
+                    //printf("moving up\n");
                     GridPosition Gpos;
                     int new_col = partitionList[partition_index].blockList[0].col - 1;
                     Gpos.row = row;
@@ -1024,7 +1020,7 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                     
                     partitionList[partition_index].blockList.push_front(Gpos);
                     partitionList[partition_index].blockList.pop_back();
-                    printf("finished moving up%d\n",i);
+                    //printf("finished moving up%d\n",i);
                 }
             }
             //unlock
@@ -1036,19 +1032,19 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
             movable = true;
             int moves_counter = traveler_current_position.col+1 - partitionList[partition_index].blockList[0].col;
             if (moves_counter < numCols - partitionList[partition_index].blockList[length-1].col) {
-                printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+                //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
                 for(int i = 1; i <= moves_counter; i++){
-                    printf("%d\n",moves_counter);
+                    //printf("%d\n",moves_counter);
                     if (grid[row][partitionList[partition_index].blockList[length-1].col + i] != FREE_SQUARE){
                         movable = false;
-                        printf("ops\n");
+                        //printf("ops\n");
                     }
-                    printf("right -> checking row: %d, col:%d\n", row, partitionList[partition_index].blockList[length-1].col + i);
+                    //printf("right -> checking row: %d, col:%d\n", row, partitionList[partition_index].blockList[length-1].col + i);
                 }
-                printf("right -> done checking\n");
+                //printf("right -> done checking\n");
                 if(movable){
                     for(int i = 1; i <= moves_counter; i++){
-                        printf("moving down\n");
+                        //printf("moving down\n");
                         GridPosition Gpos;
                         int new_col = partitionList[partition_index].blockList[length-1].col + 1;
                         Gpos.col = new_col;
@@ -1059,7 +1055,7 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                         grid[row][partitionList[partition_index].blockList[0].col] = FREE_SQUARE;
                         
                         partitionList[partition_index].blockList.pop_front();
-                        printf("finished moving down\n");
+                        //printf("finished moving down\n");
                     }
                 }
             }else{
