@@ -43,3 +43,6 @@ FINALLIZE VERSION 1 & 2 by end of the day.
 REPORT FINDING
     V2 Vs V3 
         no walls, no partitions generated given the exact occupants in V2 will not run because there is no lock
+
+    V5
+        2D Vector vs 2D array pointer
