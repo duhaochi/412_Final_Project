@@ -80,8 +80,8 @@ void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
 void initialize_travelers();
 void initialize_segLocks();
+void initialize_gridLocks();
 void movePartition(int partition_index);
-
 
 bool movePartition(int partition_index,GridPosition traveler_current_position);
 int search_partition_index(int row, int col);
@@ -100,7 +100,13 @@ typedef struct ThreadInfo
     
 } ThreadInfo;
 
-static pthread_mutex_t LOCK;
+pthread_mutex_t LOCK;
+// pthread_mutex_t GRIDLOCK[][];
+
+// here is for version5  grid locks
+vector<vector<pthread_mutex_t>> grid_locks;
+//end_______
+
 deque<pthread_mutex_t> segmentLocks;
 //indecate which traveler you have control over;
 int traveler_control_index = 0;
@@ -390,9 +396,10 @@ void initializeApplication(void)
     generateWalls();
     generatePartitions();
     initialize_segLocks();
-    initialize_travelers();
+	initialize_gridLocks();
+	initialize_travelers();
 
-    //    Initialize traveler info structs
+	//    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
     pthread_t travelerThread;
     int error_code = pthread_create(&travelerThread, NULL, create_travelers, NULL);
@@ -409,6 +416,33 @@ void initialize_segLocks(){
         pthread_mutex_init(&lock, NULL);
         segmentLocks.push_back(lock);
     }
+}
+
+void initialize_gridLocks(){
+    /*
+        Initializing locks for each cell on the grid.
+
+
+             <vector>[0] = vector
+            vector< vector >
+            {  
+                 row 0 { lock, lock, lock,... }
+                 row 1 { lock, lock, lock,... }
+            }
+    */
+
+    printf("Starting Gridlocks\n");
+    for (int i = 0; i < numRows; i++){
+		vector<pthread_mutex_t> row_vec;
+		for (int j = 0; j < numCols; j++)
+		{
+			pthread_mutex_t lock;
+            pthread_mutex_init(&lock, NULL);
+			row_vec.push_back(lock);
+		}
+		grid_locks.push_back(row_vec);
+	}
+	printf("End of Gridlocks\n");
 }
 
 void initialize_travelers(){
