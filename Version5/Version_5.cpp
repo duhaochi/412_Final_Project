@@ -807,7 +807,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                     growTail = false;
                 }
 
-                if (travelerList[index].segmentList[0].row <= numRows - 1 $$ locked){
+                if (travelerList[index].segmentList[0].row <= numRows - 1 && locked){
                     pthread_mutex_unlock(&grid_locks[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col]);
                 }
             }
