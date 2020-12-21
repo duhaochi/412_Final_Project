@@ -377,7 +377,7 @@ void initializeApplication(void){
     srand((unsigned int) time(NULL));
 
     //    generate a random exit
-    for (int i=0; i < 50; i++){
+    for (int i=0; i < 1; i++){
         exitPos = getNewFreePosition();
         grid[exitPos.row][exitPos.col] = EXIT;
     }
@@ -391,7 +391,7 @@ void initializeApplication(void){
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    generateWalls();
+    //generateWalls();
     generatePartitions();
     initialize_segLocks();
 	initialize_gridLocks();
@@ -928,13 +928,27 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
         int moves_counter = partitionList[partition_index].blockList[length-1].row+1 - traveler_current_position.row;
         if(partitionList[partition_index].blockList[0].row >= moves_counter){
         //for loop (locks)
+   
             for(int i = 1; i <= moves_counter; i++){
-                if (grid[partitionList[partition_index].blockList[0].row - i][col] != FREE_SQUARE){
+ 
+                // lock the grid here        
+                pthread_mutex_lock(&grid_locks[row - i][col]);
+
+                if (grid[partitionList[partition_index].blockList[0].row - i][col] != FREE_SQUARE){ 
 					movable = false;
 				}
+
+                /*
+                [           W  W
+                            0  0
+                    P P P L L  TF
+                            T1 T2
+                            T1 T2            ]
+                */
+
 				//printf("checking row: %d, col:%d\n", partitionList[partition_index].blockList[0].row - i, col);
-            }
-            //printf("done checking\n");
+            }// FOR LOOP END
+
             //if I can I will
             //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
             if(movable){
@@ -952,7 +966,10 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                     //printf("finished moving up%d\n",i);
                 }
             }// movable checked END
-            // unlock the grid here??
+            // unlock the grid here
+            for(int i = 1; i <= moves_counter; i++){
+                pthread_mutex_unlock(&grid_locks[row - i][col]);
+            }
         }// row checking with moves_counter END
         else{
             movable=false;
