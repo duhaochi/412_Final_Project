@@ -88,6 +88,7 @@ int search_partition_index(int row, int col);
 //==================================================================================
 
 //===============================virables I added==================================
+int debug_counter = 0;
 typedef struct ThreadInfo
 {
     //    you probably want these
@@ -377,7 +378,7 @@ void initializeApplication(void){
     srand((unsigned int) time(NULL));
 
     //    generate a random exit
-    for (int i=0; i < 1; i++){
+    for (int i=0; i < 3; i++){
         exitPos = getNewFreePosition();
         grid[exitPos.row][exitPos.col] = EXIT;
     }
@@ -391,7 +392,7 @@ void initializeApplication(void){
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
+    generateWalls();
     generatePartitions();
     initialize_segLocks();
 	initialize_gridLocks();
@@ -550,7 +551,7 @@ void* player_behaviour(void* traveler_index){
             pthread_mutex_lock(&LOCK);
             still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
             pthread_mutex_unlock(&LOCK);
-            usleep(100000);
+            sleep(1);
         }
     }
 
@@ -567,6 +568,8 @@ void* player_behaviour(void* traveler_index){
 bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 {
     //pervent seg fault
+    debug_counter += 1;
+    printf("%d \n",debug_counter);
     if(index >= numTravelers){
         printf("player index does not exist\n");
         return false;
