@@ -33,15 +33,22 @@ FINALLIZE VERSION 1 & 2 by end of the day.
         once all the traveler exited,
             When do we do?
 
-    V4 & 5
-        Per Prof., 
-            Locking and unlocking happen twice
-            when you look at it "LOCK", done looking "UNLOCK"
-            moving in "LOCK" ,done moving in "UNLOCK"    
+        V4 & 5
+            * (yes, verified) DELETE GLOBAL LOCK
 
-            Question is when you unclock it after done looking  and "UNLOCK"
-                    SOMEBODY can come into that spot.
-                    Should it not be one continuciouly locked until moved in?
+            *(verified ) partitions itself has to be locked 
+
+            Per Prof., 
+                Locking and unlocking happen twice
+                when you look at it "LOCK", done looking "UNLOCK"
+                moving in "LOCK" ,done moving in "UNLOCK"    
+
+                Question is when you unclock it after done looking  and "UNLOCK"
+                        SOMEBODY can come into that spot.
+                        Should it not be one continuciouly locked until moved in?
+
+    
+    
     ASSUMTION
         * program expect user to provide numeric string type.
         * number of threads cannot exceed the free amount grid (has to consider walls and partitions)
@@ -55,3 +62,5 @@ REPORT FINDING
 
     V5
         2D Vector vs 2D array pointer
+        Dicussion for moving partions with grid lock
+            we implemented if not movable don't go, release the locks.
