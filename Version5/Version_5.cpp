@@ -391,7 +391,7 @@ void initializeApplication(void){
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
+    generateWalls();
     generatePartitions();
     initialize_segLocks();
 	initialize_gridLocks();
@@ -550,7 +550,7 @@ void* player_behaviour(void* traveler_index){
             pthread_mutex_lock(&LOCK);
             still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
             pthread_mutex_unlock(&LOCK);
-            usleep(100000);
+            usleep(1000000);
         }
     }
 
@@ -973,20 +973,27 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
         }// row checking with moves_counter END
         else{
             movable=false;
-        }
+        }// vertical movement END
+        
         //if can't be moved up, then I will check if  I move partition down?
         if(!movable){
             movable = true;
             int moves_counter = traveler_current_position.row+1 - partitionList[partition_index].blockList[0].row;
-            if (moves_counter < numRows - partitionList[partition_index].blockList[length-1].row) {
-                //lock(grids)
+
+			int lock_row = partitionList[partition_index].blockList[length - 1].row;
+
+				if (moves_counter < numRows - partitionList[partition_index].blockList[length - 1].row)
+			{
+				//lock(grids)
                 //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
                 for(int i = 1; i <= moves_counter; i++){
                     //printf("%d\n",moves_counter);
-                    if (grid[partitionList[partition_index].blockList[length-1].row + i][col] != FREE_SQUARE){
-                        movable = false;
-                    }
-                    //printf("down -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[length-1].row + i, col);
+					pthread_mutex_lock(&grid_locks[lock_row + i][col]);
+					if (grid[partitionList[partition_index].blockList[length - 1].row + i][col] != FREE_SQUARE)
+					{
+						movable = false;
+					}
+					//printf("down -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[length-1].row + i, col);
                 }
                 //printf("down -> done checking\n");
                 if(movable){
@@ -1006,10 +1013,16 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                     }
                 }// moable check END
                 // UNLOCK GRIND HERE
-            }else{
-                movable = false;
-            }
-        }
+                for(int i = 1; i <= moves_counter; i++){
+                    pthread_mutex_unlock(&grid_locks[lock_row + i][col]);
+                }
+			}
+			else
+			{
+				movable = false;
+			}
+
+		}
     // if partition is horizontal
     }else{
         //first can I move left?
