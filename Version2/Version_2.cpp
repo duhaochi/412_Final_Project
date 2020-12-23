@@ -73,6 +73,7 @@ uniform_int_distribution<unsigned int> colGenerator;
 //===============================functions I added==================================
 void* create_travelers(void*);
 void* player_behaviour(void*);
+void restart_game();
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
 //==================================================================================
 
@@ -303,7 +304,7 @@ void initializeApplication(void)
     srand((unsigned int) time(NULL));
 
     //    generate a random exit
-    for (int i=0; i < 150; i++){
+    for (int i=0; i < 10; i++){
         exitPos = getNewFreePosition();
         grid[exitPos.row][exitPos.col] = EXIT;
     }
@@ -317,8 +318,8 @@ void initializeApplication(void)
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
+    generateWalls();
+    generatePartitions();
     
     //    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
@@ -348,6 +349,20 @@ void* create_travelers(void*){
     }
     
     return NULL;
+}
+void restart_game(){
+    numTravelersDone = 0;
+    for (int i = 0; i < numTravelers; i++){
+        TravelerSegment newSeg;
+        // HARDCODING START POINT
+        GridPosition pos = getNewFreePosition();
+        //    Note that treating an enum as a sort of integer is increasingly
+        //    frowned upon, as C++ versions progress
+        Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
+        TravelerSegment seg = {pos.row, pos.col, dir};
+        travelerList[i].segmentList.push_back(seg);
+    }
+    
 }
 
 void* player_behaviour(void* traveler_index){
@@ -415,7 +430,10 @@ void* player_behaviour(void* traveler_index){
 
         // UNCOMMENT THIS ONCE IT'S WORKING
         still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
-        usleep(100000);
+        usleep(1000000);
+    }
+    if (numTravelersDone == numTravelers){
+        restart_game();
     }
 
     numLiveThreads--;

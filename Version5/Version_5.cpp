@@ -7,8 +7,9 @@
 //
 
 #include <stdio.h>
-
-
+#include <stdlib.h>
+#include <ctype.h>
+#include <climits>
 #include <iostream>
 #include <string>
 #include <random>
@@ -288,7 +289,7 @@ int main(int argc, char** argv){
 
     /* Version 2 LARAW*/
 
-    if(argc != 5){
+    if(argc != 4 && argc != 5 ){
         printf("Usage: <executable>");
         printf(" <width of the grid>");
         printf(" <height N of the grid>");
@@ -297,10 +298,31 @@ int main(int argc, char** argv){
         exit(1);
     }
 
+    for (int i=1 ; i< argc; i++){
+
+     if( !isdigit(*argv[i]) ){
+        perror("Please provide a valid input: ");
+        exit(1);
+     }
+
+    }
+    
     numCols= atoi(argv[1]);
     numRows = atoi(argv[2]);
     numTravelers = atoi(argv[3]);
-    growSegAfterNumOfMove = atoi(argv[4]);
+    
+    if ( numCols < 12 || numRows < 12){
+        printf("Please provide number of row or colums larger than 12.\n");
+        exit(1);
+    }
+
+    if(argc == 4 ){
+        growSegAfterNumOfMove = INT_MAX;
+    }else{
+
+        growSegAfterNumOfMove = atoi(argv[4]);
+    }
+
     numLiveThreads = numTravelers;
     numTravelersDone = 0;
 
@@ -417,12 +439,13 @@ void initialize_partitionLocks(){
      * Purpose: 
      *      Two travelers cannot request to move one partition at the same time.
      */
-    printf("problem");
+    partitions_locks = new pthread_mutex_t[partitionList.size()];
     for (int i = 0; i < partitionList.size(); i++){
         pthread_mutex_t lock;
         pthread_mutex_init(&lock, NULL);
         partitions_locks[i] = lock;
     }
+    //printf("done initalize partiionlocks\n");
 
 }
 void initialize_segLocks(){
@@ -537,32 +560,12 @@ void* player_behaviour(void* traveler_index){
     int index = traveler_thread->threadIndex;
 
 
-    //cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
-    //pos.col << "), direction: " << dirStr(dir) <<  endl;
-    //cout << "\t";
-
-    // HARDCODED START
-    // vector<Direction> secondThdir = { NORTH, NORTH, NORTH, NORTH, EAST, SOUTH,SOUTH, SOUTH, SOUTH, WEST};
-    // int temp=0;
-    // HARDCODED END
-
     bool still_travelling = true;
     //    I add 0-n segments to my travelers
     while (still_travelling){
         TravelerSegment currSeg = travelerList[index].segmentList[0];
         
-        // HARDCODED START
-        // if(index == 1){
-        //     still_travelling = moveTraveler(index, secondThdir.at(temp++), true);
-        //     if(temp==10){
-        //         temp= 0;
-        //     }
-        // }else{
-        //     still_travelling = moveTraveler(index, dir, true);
-        // }
-        // HARDCODED END
-
-        // UNCOMMENT THIS ONCE IT'S WORKING
+        
         if (index != traveler_control_index){
             pthread_mutex_lock(&LOCK);
             still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
@@ -575,9 +578,7 @@ void* player_behaviour(void* traveler_index){
     numLiveThreads--;
     numTravelersDone++;
     
-    //for (unsigned int k=0; k<numTravelers; k++)
-    //   delete []travelerColor[k];
-    //delete []travelerColor;
+
     
     return NULL;
 }
@@ -585,8 +586,6 @@ void* player_behaviour(void* traveler_index){
 bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 {
     //pervent seg fault
-    debug_counter += 1;
-    printf("%d \n",debug_counter);
     if(index >= numTravelers){
         printf("player index does not exist\n");
         return false;
@@ -594,17 +593,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
     GridPosition travelerPosition;
     travelerPosition.row = travelerList[index].segmentList[0].row;
     travelerPosition.col = travelerList[index].segmentList[0].col;
-    /*
-        Return True or False:
-            True == Traveler is still travelling.
-            False == Traveler reached EXIT.
-    */
-//    cout << "Moving traveler " << index << " at (" <<
-//            travelerList[index].segmentList[0].row << ", " <<
-//            travelerList[index].segmentList[0].col << ", " <<
-//            dirStr(travelerList[index].segmentList[0].dir) << ")" <<
-//            " in direction: " << dirStr(dir) << endl;
-    // no testing
 
   
     bool locked = true;
@@ -648,9 +636,9 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
                         // if the moving dir is a partition
-                        printf("require locks");
+                        
 						int partition_index =  search_partition_index(travelerList[index].segmentList[0].row - 1, travelerList[index].segmentList[0].col);
-                        printf("done\n");
+                        
 						pthread_mutex_lock(&partitions_locks[partition_index]);
 						bool moved = movePartition(partition_index, travelerPosition);
                         pthread_mutex_unlock(&partitions_locks[partition_index]);
@@ -711,7 +699,14 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
-                        bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col-1), travelerPosition);
+                        int partition_index =  search_partition_index(travelerPosition.row, travelerPosition.col-1);	
+                        pthread_mutex_lock(&partitions_locks[partition_index]);
+                        bool moved = movePartition(partition_index, travelerPosition);
+                        pthread_mutex_unlock(&partitions_locks[partition_index]);
+			
+                        /*
+                            bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col-1), travelerPosition);
+                        */
                         if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                         travelerList[index].segmentList[0].col-1,
@@ -763,8 +758,15 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
+                        int partition_index =  search_partition_index(travelerPosition.row, travelerPosition.col+1);	
+                        pthread_mutex_lock(&partitions_locks[partition_index]);
+                        bool moved = movePartition(partition_index, travelerPosition);
+                        pthread_mutex_unlock(&partitions_locks[partition_index]);
+                        
+                        /*
                         bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col+1), travelerPosition);
-                        if(moved){
+                        */
+                       if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                         travelerList[index].segmentList[0].col+1,
                                                         EAST};
@@ -817,7 +819,14 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
+                        int partition_index =  search_partition_index(travelerPosition.row+1, travelerPosition.col);	
+                        pthread_mutex_lock(&partitions_locks[partition_index]);
+                        bool moved = movePartition(partition_index, travelerPosition);
+                        pthread_mutex_unlock(&partitions_locks[partition_index]);
+
+                        /*
                         bool moved = movePartition(search_partition_index(travelerPosition.row+1, travelerPosition.col), travelerPosition);
+                        */
                         if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
                                                         travelerList[index].segmentList[0].col,
@@ -914,10 +923,6 @@ int search_partition_index(int row, int col){
             }
         }
     }
-    // for(int i = 0; i < 5;i++){
-    //     printf("row: %d, col: %d\n", partitionList[index].blockList[i].row, partitionList[index].blockList[i].col);
-    // }
-    // printf("found index at %d\n", index);
     return index;
 }
 
@@ -975,10 +980,10 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
             }// FOR LOOP END
 
             //if I can I will
-            //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
+            
             if(movable){
                 for(int i = 1; i <= moves_counter; i++){
-                    //printf("moving up\n");
+                    //"moving up\n"
                     GridPosition Gpos;
                     int new_row = partitionList[partition_index].blockList[0].row - 1;
                     Gpos.row = new_row;
@@ -988,7 +993,7 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
                     
                     partitionList[partition_index].blockList.push_front(Gpos);
                     partitionList[partition_index].blockList.pop_back();
-                    //printf("finished moving up%d\n",i);
+                    //"finished moving up"
                 }
             }// movable checked END
             // unlock the grid here
@@ -1010,7 +1015,6 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
 				if (moves_counter < numRows - partitionList[partition_index].blockList[length - 1].row)
 			{
 				//lock(grids)
-                //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
                 for(int i = 1; i <= moves_counter; i++){
                     //printf("%d\n",moves_counter);
 					pthread_mutex_lock(&grid_locks[lock_row + i][col]);
@@ -1018,7 +1022,6 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
 					{
 						movable = false;
 					}
-					//printf("down -> checking row: %d, col:%d\n", partitionList[partition_index].blockList[length-1].row + i, col);
                 }
                 //printf("down -> done checking\n");
                 if(movable){
@@ -1065,7 +1068,6 @@ bool movePartition(int partition_index,GridPosition traveler_current_position){
             }
             //printf("done checking\n");
             //if I can I will
-            //printf("list size = %d - %d\n",traveler_current_position.row, partitionList[partition_index].blockList[0].row-1);
             if(movable){
                 for(int i = 1; i <= moves_counter; i++){
                     //printf("moving up\n");
