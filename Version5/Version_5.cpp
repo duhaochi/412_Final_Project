@@ -7,8 +7,9 @@
 //
 
 #include <stdio.h>
-
-
+#include <stdlib.h>
+#include <ctype.h>
+#include <climits>
 #include <iostream>
 #include <string>
 #include <random>
@@ -287,7 +288,7 @@ int main(int argc, char** argv){
 
     /* Version 2 LARAW*/
 
-    if(argc != 5){
+    if(argc != 4 && argc != 5 ){
         printf("Usage: <executable>");
         printf(" <width of the grid>");
         printf(" <height N of the grid>");
@@ -296,10 +297,31 @@ int main(int argc, char** argv){
         exit(1);
     }
 
+    for (int i=1 ; i< argc; i++){
+
+     if( !isdigit(*argv[i]) ){
+        perror("Please provide a valid input: ");
+        exit(1);
+     }
+
+    }
+    
     numCols= atoi(argv[1]);
     numRows = atoi(argv[2]);
     numTravelers = atoi(argv[3]);
-    growSegAfterNumOfMove = atoi(argv[4]);
+    
+    if ( numCols < 12 || numRows < 12){
+        printf("Please provide number of row or colums larger than 12.\n");
+        exit(1);
+    }
+
+    if(argc == 4 ){
+        growSegAfterNumOfMove = INT_MAX;
+    }else{
+
+        growSegAfterNumOfMove = atoi(argv[4]);
+    }
+
     numLiveThreads = numTravelers;
     numTravelersDone = 0;
 
@@ -416,12 +438,13 @@ void initialize_partitionLocks(){
      * Purpose: 
      *      Two travelers cannot request to move one partition at the same time.
      */
-
+    partitions_locks = new pthread_mutex_t[partitionList.size()];
     for (int i = 0; i < partitionList.size(); i++){
         pthread_mutex_t lock;
         pthread_mutex_init(&lock, NULL);
         partitions_locks[i] = lock;
     }
+    //printf("done initalize partiionlocks\n");
 
 }
 void initialize_segLocks(){
@@ -648,6 +671,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 						pthread_mutex_lock(&partitions_locks[partition_index]);
 						bool moved = movePartition(partition_index, travelerPosition);
                         pthread_mutex_unlock(&partitions_locks[partition_index]);
+                        //printf("finished locking\n");
 						if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row-1,
                                                         travelerList[index].segmentList[0].col,
@@ -705,7 +729,14 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
-                        bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col-1), travelerPosition);
+                        int partition_index =  search_partition_index(travelerPosition.row, travelerPosition.col-1);	
+                        pthread_mutex_lock(&partitions_locks[partition_index]);
+                        bool moved = movePartition(partition_index, travelerPosition);
+                        pthread_mutex_unlock(&partitions_locks[partition_index]);
+			
+                        /*
+                            bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col-1), travelerPosition);
+                        */
                         if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                         travelerList[index].segmentList[0].col-1,
@@ -757,8 +788,15 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
+                        int partition_index =  search_partition_index(travelerPosition.row, travelerPosition.col+1);	
+                        pthread_mutex_lock(&partitions_locks[partition_index]);
+                        bool moved = movePartition(partition_index, travelerPosition);
+                        pthread_mutex_unlock(&partitions_locks[partition_index]);
+                        
+                        /*
                         bool moved = movePartition(search_partition_index(travelerPosition.row, travelerPosition.col+1), travelerPosition);
-                        if(moved){
+                        */
+                       if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row,
                                                         travelerList[index].segmentList[0].col+1,
                                                         EAST};
@@ -811,7 +849,14 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                         travelerList[index].move_counter += 1;
                         grid[travelerList[index].segmentList[0].row][travelerList[index].segmentList[0].col] = TRAVELER;
                     }else{
+                        int partition_index =  search_partition_index(travelerPosition.row+1, travelerPosition.col);	
+                        pthread_mutex_lock(&partitions_locks[partition_index]);
+                        bool moved = movePartition(partition_index, travelerPosition);
+                        pthread_mutex_unlock(&partitions_locks[partition_index]);
+
+                        /*
                         bool moved = movePartition(search_partition_index(travelerPosition.row+1, travelerPosition.col), travelerPosition);
+                        */
                         if(moved){
                             TravelerSegment newSeg = {    travelerList[index].segmentList[0].row+1,
                                                         travelerList[index].segmentList[0].col,
