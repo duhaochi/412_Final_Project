@@ -7,6 +7,7 @@
 //    heart's content.
 #include <iostream>
 #include <string>
+#include <climits>
 #include <random>
 #include <pthread.h>
 //
@@ -74,6 +75,8 @@ uniform_int_distribution<unsigned int> colGenerator;
 void* create_travelers(void*);
 void* player_behaviour(void*);
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
+void initialize_travelers();
+
 //==================================================================================
 
 //===============================virables I added==================================
@@ -196,25 +199,8 @@ void slowdownTravelers(void)
 //------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-    //    We know that the arguments  of the program  are going
-    //    to be the width (number of columns) and height (number of rows) of the
-    //    grid, the number of travelers, etc.
-    //    So far, I hard code-some values
 
-    /* Version 1  LARAW */
-    // numCols= 11; // == INIT_WIN_X (gl_frontEnd.cpp)
-    // numRows = 5; // == INIT_WIN_Y (gl_frontEnd.cpp)
-    // numTravelers = 2; // Single-traveler per hand-out
-    // growSegAfterNumOfMove = 2; // arbitrary setting. can be set to any num
-    // numLiveThreads = numTravelers; // Once they finish, thread--;
-    // numTravelersDone = 0;  // why is it ZERO? Nobody finishes yet.
-    /* END */ 
-
-
-
-    /* Version 2 LARAW*/
-
-    if(argc != 5){
+    if(argc != 4 && argc != 5 ){
         printf("Usage: <executable>");
         printf(" <width of the grid>");
         printf(" <height N of the grid>");
@@ -223,16 +209,35 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    for (int i=1 ; i< argc; i++){
+
+     if( !isdigit(*argv[i]) ){
+        perror("Please provide a valid input: ");
+        exit(1);
+     }
+
+    }
+    
     numCols= atoi(argv[1]);
     numRows = atoi(argv[2]);
     numTravelers = atoi(argv[3]);
-    growSegAfterNumOfMove = atoi(argv[4]);
+    
+    if ( numCols < 12 || numRows < 12){
+        printf("Please provide number of row or colums larger than 12.\n");
+        exit(1);
+    }
+
+    if(argc == 4 ){
+        growSegAfterNumOfMove = INT_MAX;
+    }else{
+
+        growSegAfterNumOfMove = atoi(argv[4]);
+    }
+
     numLiveThreads = numTravelers;
     numTravelersDone = 0;
 
-    /* end */
     
-
     //    Even though we extracted the relevant information from the argument
     //    list, I still need to pass argc and argv to the front-end init
     //    function because that function passes them to glutInit, the required call
@@ -302,24 +307,15 @@ void initializeApplication(void)
     //    real simulation), only wall/partition location and some color
     srand((unsigned int) time(NULL));
 
-    //    generate a random exit
-    for (int i=0; i < 150; i++){
-        exitPos = getNewFreePosition();
-        grid[exitPos.row][exitPos.col] = EXIT;
-    }
-    // HARDCODED EXIT
-    // GridPosition pos;
-    // pos.row = 2;
-    // pos.col = 5;
-    // exitPos = pos;
-    // grid[exitPos.row][exitPos.col] = EXIT;
-    // HARDCODED END
+    exitPos = getNewFreePosition();
+    grid[exitPos.row][exitPos.col] = EXIT;
 
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
-    
+    generateWalls();
+    generatePartitions();
+    initialize_travelers();
+
     //    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
     pthread_t travelerThread;
@@ -328,9 +324,36 @@ void initializeApplication(void)
     {
         printf("ERROR: Failed to create create_travelers thread %d\n", error_code);
     }
-    //    free array of colors
 }
 
+void initialize_travelers(){
+	for (int i = 0; i < numTravelers; i++){
+        Traveler traveler;
+        travelerList.push_back(traveler);
+        travelerList[i].index = i;
+        travelerList[i].travelling = true;
+		travelerList[i].move_counter = 0;
+
+		float** travelerColor = createTravelerColors(numTravelers);
+    
+        TravelerSegment newSeg;
+        GridPosition pos = getNewFreePosition();
+        //    Note that treating an enum as a sort of integer is increasingly
+        //    frowned upon, as C++ versions progress
+        Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
+ 
+
+        TravelerSegment seg = {pos.row, pos.col, dir};
+        travelerList[i].segmentList.push_back(seg);
+
+        for (unsigned int c=0; c<4; c++){
+            travelerList[i].rgba[c] = travelerColor[i][c];
+        }
+
+        grid[pos.row][pos.col] = TRAVELER;
+    
+    }
+}
 
 void* create_travelers(void*){
     //creating all the travlers
@@ -351,79 +374,20 @@ void* create_travelers(void*){
 }
 
 void* player_behaviour(void* traveler_index){
-    Traveler traveler;
-    travelerList.push_back(traveler);
-    
+  
     ThreadInfo* traveler_thread = (ThreadInfo*) traveler_index;
     int index = traveler_thread->threadIndex;
-    travelerList[index].index = index;
-    travelerList[index].travelling = true;
-    float** travelerColor = createTravelerColors(numTravelers);
-    
-    TravelerSegment newSeg;
-    // HARDCODING START POINT
-    GridPosition pos = getNewFreePosition();
-    //    Note that treating an enum as a sort of integer is increasingly
-    //    frowned upon, as C++ versions progress
-    Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
-	// Direction dir;
-	// GridPosition pos;
-	// if (index ==0 ){
-    //     pos.col = 0;
-    //     pos.row = 2;
-	// 	dir = EAST;
-	// }
-	// else
-	// {
-	// 	pos.col = 0;
-    //     pos.row = 4;
-    //     dir = NORTH;
-	// }
-
-    TravelerSegment seg = {pos.row, pos.col, dir};
-    travelerList[index].segmentList.push_back(seg);
-
-    grid[pos.row][pos.col] = TRAVELER;
-    cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
-    pos.col << "), direction: " << dirStr(dir) <<  endl;
-    cout << "\t";
-
-    for (unsigned int c=0; c<4; c++){
-        travelerList[index].rgba[c] = travelerColor[travelerList[traveler_thread->threadIndex].index][c];
-    }
-
-    // HARDCODED START
-    // vector<Direction> secondThdir = { NORTH, NORTH, NORTH, NORTH, EAST, SOUTH,SOUTH, SOUTH, SOUTH, WEST};
-    // int temp=0;
-    // HARDCODED END
 
     bool still_travelling = true;
     //    I add 0-n segments to my travelers
     while (still_travelling){
 		TravelerSegment currSeg = travelerList[index].segmentList[0];
-		
-        // HARDCODED START
-        // if(index == 1){
-        //     still_travelling = moveTraveler(index, secondThdir.at(temp++), true);
-        //     if(temp==10){
-        //         temp= 0;
-        //     }
-        // }else{
-        //     still_travelling = moveTraveler(index, dir, true);
-        // }		
-        // HARDCODED END
-
-        // UNCOMMENT THIS ONCE IT'S WORKING
         still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
         usleep(100000);
     }
 
     numLiveThreads--;
     numTravelersDone++;
-    
-    for (unsigned int k=0; k<numTravelers; k++)
-        delete []travelerColor[k];
-    delete []travelerColor;
     
     return NULL;
 }
@@ -435,24 +399,10 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
             True == Traveler is still travelling.
             False == Traveler reached EXIT.
     */
-    cout << "Moving traveler " << index << " at (" <<
-            travelerList[index].segmentList[0].row << ", " <<
-            travelerList[index].segmentList[0].col << ", " <<
-            dirStr(travelerList[index].segmentList[0].dir) << ")" <<
-            " in direction: " << dirStr(dir) << endl;
-    // no testing
-
-  
 
     if (travelerList[index].travelling){
-
         switch (dir)
         {
-
-                // [ 0 0 0 0
-                //   0 X 0 0
-                //   0 1 0 0
-                // ]
             case NORTH: {
                 if (travelerList[index].segmentList[0].row > 0 && grid[travelerList[index].segmentList[0].row-1][travelerList[index].segmentList[0].col] == EXIT){
                     travelerList[index].travelling = false;
@@ -526,7 +476,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
             }
             break;
             default:
-                //this need to be changed
                 return true;
             break;
         } //switch end
