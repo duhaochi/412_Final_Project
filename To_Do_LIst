@@ -64,3 +64,18 @@ REPORT FINDING
         2D Vector vs 2D array pointer
         Dicussion for moving partions with grid lock
             we implemented if not movable don't go, release the locks.
+
+    index 0 traveler does not automatically move
+    you need to control it.
+
+    LA RAW
+    MINIMUM (done in  v5 )
+    
+    REPORT, 
+
+
+    Version 1 and 2 need to be checked
+    Version 2 need partition walls
+    Version 3 has more than 1 exit. 
+
+    Possibily Deadlock 
