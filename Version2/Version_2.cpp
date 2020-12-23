@@ -5,6 +5,9 @@
 //  Created by Jean-Yves Hervé on 2020-12-01
 //    This is public domain code.  By all means appropriate it and change is to your
 //    heart's content.
+//
+//  Updated by Haochi Du & La Raw ( December, 2020 )
+//
 #include <iostream>
 #include <string>
 #include <climits>
@@ -42,8 +45,7 @@ unsigned int numRows = 0;    //    height of the grid
 unsigned int numCols = 0;    //    width
 unsigned int numTravelers = 0;    //    initial number
 unsigned int numTravelersDone = 0;
-unsigned int numLiveThreads = 0;        //    the number of live traveler threads
-unsigned int growSegAfterNumOfMove = 0; // the number of N moves after which a traveler should grow a new segment.
+unsigned int numLiveThreads = 0;   //    the number of live traveler threads
 vector<Traveler> travelerList;
 vector<SlidingPartition> partitionList;
 GridPosition    exitPos;    //    location of the exit
@@ -93,6 +95,7 @@ typedef struct ThreadInfo
     
 } ThreadInfo;
 
+unsigned int growSegAfterNumOfMove = 0; // the number of N moves after which a traveler should grow a new segment.
 ThreadInfo* thread_array;
 
 //==================================================================================
