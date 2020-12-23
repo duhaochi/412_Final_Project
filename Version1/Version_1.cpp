@@ -202,8 +202,8 @@ int main(int argc, char** argv)
     //    So far, I hard code-some values
 
     /* Version 1  LARAW */
-    numCols= 4; // == INIT_WIN_X (gl_frontEnd.cpp)
-    numRows = 4; // == INIT_WIN_Y (gl_frontEnd.cpp)
+    numCols= 10; // == INIT_WIN_X (gl_frontEnd.cpp)
+    numRows = 10; // == INIT_WIN_Y (gl_frontEnd.cpp)
     numTravelers = 1; // Single-traveler per hand-out
     growSegAfterNumOfMove = 3; // arbitrary setting. can be set to any num
     numLiveThreads = numTravelers; //  Once they finish, substract 1;
@@ -324,7 +324,7 @@ void* create_travelers(void*){
             printf("ERROR: Failed to create thread %d with error_code=%d\n", i, error_code);
         }
         //make this number bigger if seg falut happens when creating muiltiple traveler
-        sleep(1);
+        usleep(100);
     }
     
     return NULL;
