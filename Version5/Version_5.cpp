@@ -2,8 +2,8 @@
 //  Version_4.cpp
 //  final_pro
 //
-//  Created by duhaochi on 12/18/20.
-//  Copyright © 2020 duhaochi. All rights reserved.
+//  Created by du_haochi & la_raw on 12/18/20.
+//  Copyright © 2020 duhaochi & La_raw. All rights reserved.
 //
 
 #include <stdio.h>
