@@ -74,6 +74,7 @@ uniform_int_distribution<unsigned int> colGenerator;
 //===============================functions I added==================================
 void* create_travelers(void*);
 void* player_behaviour(void*);
+void restart_game();
 bool moveTraveler(unsigned int index, Direction dir, bool growTail);
 void initialize_travelers();
 
@@ -372,6 +373,20 @@ void* create_travelers(void*){
     
     return NULL;
 }
+void restart_game(){
+    numTravelersDone = 0;
+    for (int i = 0; i < numTravelers; i++){
+        TravelerSegment newSeg;
+        // HARDCODING START POINT
+        GridPosition pos = getNewFreePosition();
+        //    Note that treating an enum as a sort of integer is increasingly
+        //    frowned upon, as C++ versions progress
+        Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
+        TravelerSegment seg = {pos.row, pos.col, dir};
+        travelerList[i].segmentList.push_back(seg);
+    }
+    
+}
 
 void* player_behaviour(void* traveler_index){
   
@@ -383,7 +398,10 @@ void* player_behaviour(void* traveler_index){
     while (still_travelling){
 		TravelerSegment currSeg = travelerList[index].segmentList[0];
         still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
-        usleep(100000);
+        usleep(1000000);
+    }
+    if (numTravelersDone == numTravelers){
+        restart_game();
     }
 
     numLiveThreads--;
