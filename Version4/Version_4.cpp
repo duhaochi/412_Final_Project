@@ -427,19 +427,7 @@ void initialize_travelers(){
         //    Note that treating an enum as a sort of integer is increasingly
         //    frowned upon, as C++ versions progress
         Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
-        // Direction dir;
-        // GridPosition pos;
-        // if (index ==0 ){
-        //     pos.col = 0;
-        //     pos.row = 2;
-        //     dir = EAST;
-        // }
-        // else
-        // {
-        //     pos.col = 0;
-        //     pos.row = 4;
-        //     dir = NORTH;
-        // }
+    
 
         TravelerSegment seg = {pos.row, pos.col, dir};
         travelerList[i].segmentList.push_back(seg);
@@ -476,31 +464,13 @@ void* player_behaviour(void* traveler_index){
     int index = traveler_thread->threadIndex;
 
 
-    //cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
-    //pos.col << "), direction: " << dirStr(dir) <<  endl;
-    //cout << "\t";
-
-    // HARDCODED START
-    // vector<Direction> secondThdir = { NORTH, NORTH, NORTH, NORTH, EAST, SOUTH,SOUTH, SOUTH, SOUTH, WEST};
-    // int temp=0;
-    // HARDCODED END
+   
 
     bool still_travelling = true;
     //    I add 0-n segments to my travelers
     while (still_travelling){
         TravelerSegment currSeg = travelerList[index].segmentList[0];
-        
-        // HARDCODED START
-        // if(index == 1){
-        //     still_travelling = moveTraveler(index, secondThdir.at(temp++), true);
-        //     if(temp==10){
-        //         temp= 0;
-        //     }
-        // }else{
-        //     still_travelling = moveTraveler(index, dir, true);
-        // }
-        // HARDCODED END
-
+     
         // UNCOMMENT THIS ONCE IT'S WORKING
         if (index != traveler_control_index){
             pthread_mutex_lock(&LOCK);
@@ -512,11 +482,7 @@ void* player_behaviour(void* traveler_index){
 
     numLiveThreads--;
     numTravelersDone++;
-    
-    //for (unsigned int k=0; k<numTravelers; k++)
-    //   delete []travelerColor[k];
-    //delete []travelerColor;
-    
+
     return NULL;
 }
 
@@ -530,19 +496,7 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
     GridPosition travelerPosition;
     travelerPosition.row = travelerList[index].segmentList[0].row;
     travelerPosition.col = travelerList[index].segmentList[0].col;
-    /*
-        Return True or False:
-            True == Traveler is still travelling.
-            False == Traveler reached EXIT.
-    */
-//    cout << "Moving traveler " << index << " at (" <<
-//            travelerList[index].segmentList[0].row << ", " <<
-//            travelerList[index].segmentList[0].col << ", " <<
-//            dirStr(travelerList[index].segmentList[0].dir) << ")" <<
-//            " in direction: " << dirStr(dir) << endl;
-    // no testing
 
-  
 
     if (travelerList[index].travelling){
 
