@@ -5,6 +5,9 @@
 //  Created by Jean-Yves Hervé on 2020-12-01
 //    This is public domain code.  By all means appropriate it and change is to your
 //    heart's content.
+//
+//  Updated by Haochi Du & La Raw ( December, 2020 )
+
 #include <iostream>
 #include <string>
 #include <random>
@@ -42,7 +45,6 @@ unsigned int numCols = 0;    //    width
 unsigned int numTravelers = 0;    //    initial number
 unsigned int numTravelersDone = 0;
 unsigned int numLiveThreads = 0;        //    the number of live traveler threads
-unsigned int growSegAfterNumOfMove = 0; // the number of N moves after which a traveler should grow a new segment.
 vector<Traveler> travelerList;
 vector<SlidingPartition> partitionList;
 GridPosition    exitPos;    //    location of the exit
@@ -89,6 +91,7 @@ typedef struct ThreadInfo
     
 } ThreadInfo;
 
+unsigned int growSegAfterNumOfMove = 0; // the number of N moves after which a traveler should grow a new segment.
 ThreadInfo* thread_array;
 
 //==================================================================================
@@ -201,25 +204,23 @@ int main(int argc, char** argv)
     //    grid, the number of travelers, etc.
     //    So far, I hard code-some values
 
-    /* Version 1  LARAW */
-    numCols= 10; // == INIT_WIN_X (gl_frontEnd.cpp)
-    numRows = 10; // == INIT_WIN_Y (gl_frontEnd.cpp)
+    numCols= 12; 
+    numRows = 12; 
     numTravelers = 1; // Single-traveler per hand-out
     growSegAfterNumOfMove = 3; // arbitrary setting. can be set to any num
     numLiveThreads = numTravelers; //  Once they finish, substract 1;
-    numTravelersDone = 0;  // why is it ZERO? Nobody finishes yet.
-    /* END */ 
+    numTravelersDone = 0;  // why is it ZERO? Because Nobody finishes yet.
 
-    
 
     //    Even though we extracted the relevant information from the argument
     //    list, I still need to pass argc and argv to the front-end init
     //    function because that function passes them to glutInit, the required call
     //    to the initialization of the glut library.
     initializeFrontEnd(argc, argv);
-    
     //    Now we can do application-level initialization
     initializeApplication();
+
+    usleep(1000); // A patch, in case of traveler was not there yet. In version 2, it is fixed.
 
     launchTime = time(NULL);
 
@@ -285,19 +286,11 @@ void initializeApplication(void)
     exitPos = getNewFreePosition();
     grid[exitPos.row][exitPos.col] = EXIT;
 
-
-    // HARDCODED EXIT
-    // GridPosition pos;
-    // pos.row = 2;
-    // pos.col = 5;
-    // exitPos = pos;
-    // grid[exitPos.row][exitPos.col] = EXIT;
-    // HARDCODED END
     
     //    Generate walls and partitions
     //_______________________________________in version one here i disable all the wall generation
-    //generateWalls();
-    //generatePartitions();
+    generateWalls();
+    generatePartitions();
     
     //    Initialize traveler info structs
     //    You will probably need to replace/complete this as you add thread-related data
@@ -316,7 +309,6 @@ void* create_travelers(void*){
     thread_array = new ThreadInfo[numTravelers];
     //creating all the travlers thread
     for (int i = 0; i < numTravelers; i++) {
-        printf("0ops___________\n");
         thread_array[i].threadIndex = i;
         int error_code = pthread_create(&thread_array[i].threadID, NULL, player_behaviour, thread_array+i);
         if (error_code != 0)
@@ -348,44 +340,20 @@ void* player_behaviour(void* traveler_index){
     //    frowned upon, as C++ versions progress
     Direction dir = static_cast<Direction>(segmentDirectionGenerator(engine));
 	
-    // HARDCODING START POINT
-    // Direction dir;
-	// GridPosition pos;
-    // pos.col = 10;
-    // pos.row = 2;
-    // dir = WEST;
-    // HARDCODE END
-
     TravelerSegment seg = {pos.row, pos.col, dir};
     travelerList[index].segmentList.push_back(seg);
     grid[pos.row][pos.col] = TRAVELER;
-    cout << "Traveler " << traveler_thread->threadIndex << " at (row=" << pos.row << ", col=" <<
-    pos.col << "), direction: " << dirStr(dir) <<  endl;
-    cout << "\t";
+
+
     for (unsigned int c=0; c<4; c++){
         travelerList[index].rgba[c] = travelerColor[travelerList[traveler_thread->threadIndex].index][c];
     }
-
-    // HARDCODED START
-    // vector<Direction> secondThdir = { NORTH, WEST, SOUTH, WEST};
-    // int temp=0;
-    // HARDCODED END
 
     bool still_travelling = true;
     //    I add 0-n segments to my travelers
     while (still_travelling){
         TravelerSegment currSeg = travelerList[index].segmentList[0];
-
-        // HARDCODED START
-        // still_travelling = moveTraveler(index, secondThdir.at(temp++) , true);
-        // if(temp==4) temp= 0;
-        // HARDCODED END
-
-
-        // UNCOMMENT THIS ONCE IT'S WORKING
-        dir = static_cast<Direction>(segmentDirectionGenerator(engine));
         still_travelling = moveTraveler(index, newDirection(currSeg.dir), true);
-
         sleep(1);
     }
     numLiveThreads--;
@@ -405,13 +373,8 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
             True == Traveler is still travelling.
             False == Traveler reached EXIT.
     */
-    cout << "Moving traveler " << index << " at (" <<
-            travelerList[index].segmentList[0].row << ", " <<
-            travelerList[index].segmentList[0].col << ", " <<
-            dirStr(travelerList[index].segmentList[0].dir) << ")" <<
-            " in direction: " << dirStr(dir) << endl;
+
     Direction forbiden_dir = NORTH;
-    // no testing
 
     if (travelerList[index].travelling){
 
@@ -485,7 +448,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
                 }
             }
             default:
-                //this need to be changed
                 return true;
             break;
         }
@@ -502,7 +464,6 @@ bool moveTraveler(unsigned int index, Direction dir, bool growTail)
 
     }
 
-    
     if (!growTail){
         travelerList[index].segmentList.pop_back();
     }
